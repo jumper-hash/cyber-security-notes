@@ -7,8 +7,6 @@ The goal of this lab was to build a **local Active Directory environment** and u
 - Network configuration and troubleshooting
 - Firewall rules and service communication
 
-This lab was built to create solid **Blue Team / Infrastructure foundations** before moving into offensive security topics.
-
 ---
 
 ## @Environment
