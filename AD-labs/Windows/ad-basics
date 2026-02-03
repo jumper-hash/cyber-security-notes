@@ -1,6 +1,6 @@
 # Active Directory & DNS Home Lab (VirtualBox)
 
-## 🎯 Lab Objective
+## @Lab Objective
 The goal of this lab was to build a **local Active Directory environment** and understand how core Windows infrastructure components work together, with a strong focus on:
 - Active Directory fundamentals
 - DNS role in AD
@@ -11,7 +11,7 @@ This lab was built to create solid **Blue Team / Infrastructure foundations** be
 
 ---
 
-## 🧱 Environment
+## @Environment
 - Hypervisor: **Oracle VirtualBox**
 - Network type: **Internal Network**
 - Network name: `intnet1`
@@ -21,7 +21,7 @@ This lab was built to create solid **Blue Team / Infrastructure foundations** be
 
 ---
 
-## 🌐 Network Configuration
+## @Network Configuration
 
 ### Windows Server (Domain Controller)
 - IP Address: `192.168.100.1/24`
@@ -40,7 +40,7 @@ The client uses **only the Domain Controller as DNS**. Public DNS servers (e.g. 
 
 ---
 
-## 🧩 Active Directory
+## @Active Directory
 - Installed **Active Directory Domain Services (AD DS)**
 - Promoted the server to a **Domain Controller**
 - Created a new domain (e.g. `lab.local`)
@@ -51,7 +51,7 @@ The client uses **only the Domain Controller as DNS**. Public DNS servers (e.g. 
 
 ---
 
-## 🌍 DNS Configuration
+## @DNS Configuration
 - DNS installed together with AD DS
 - Verified:
   - Forward Lookup Zone for the domain
