@@ -13,10 +13,10 @@
 
 #Current Focus
 
-[X] Windows Server & AD Fundamentals
+  [X] Windows Server & AD Fundamentals
 
-[ ] Linux Security Hardening (In Progress)
+  [ ] Linux Security Hardening (In Progress)
 
-[ ] Cross-platform integration & Centralized Logging
+  [ ] Cross-platform integration & Centralized Logging
 
-[ ] Vulnerability Research (Upcoming)
+  [ ] Vulnerability Research (Upcoming)
