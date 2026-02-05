@@ -1,0 +1,13 @@
+# Analysis of Group Policy Auditing
+
+## @Configuration Changes
+-I enabled success and failure auditing for logon events and object access within Group Policy.
+
+## @Applied Settings
+-I configured the relevant GPOs and ensured these settings were propagated across the domain.
+
+## @Log Analysis
+-After enabling the audit, I reviewed the security logs for logon attempts, logoffs, and object access.
+
+## @Findings
+-This allowed me to confirm that auditing was working properly, ensuring visibility into user and object access events.
