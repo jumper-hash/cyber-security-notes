@@ -12,6 +12,7 @@
 -Blue Team Practice: Detection patterns, Event ID analysis, and monitoring.
 
 #Current Focus
+
 [X] Windows Server & AD Fundamentals
 
 [ ] Linux Security Hardening (In Progress)
