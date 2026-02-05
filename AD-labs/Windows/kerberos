@@ -1,6 +1,7 @@
 # Kerberos Authentication Analysis
 ## @What is Kerberos?
--Kerberos is a network authentication protocol designed to provide secure user authentication across open networks. It uses tickets to allow nodes to prove their identity in a secure manner.
+-Kerberos is a network authentication protocol designed to provide secure user authentication across open networks.
+It uses tickets to allow nodes to prove their identity in a secure manner.
 
 ## @How Kerberos Works
 -Kerberos works by issuing a ticket-granting ticket (TGT) when a user logs in. Once the TGT is obtained, it can be used to request service tickets for specific resources.
