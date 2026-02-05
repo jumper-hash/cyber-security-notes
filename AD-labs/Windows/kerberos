@@ -1,0 +1,14 @@
+# Kerberos Authentication Analysis
+## @What is Kerberos?
+-Kerberos is a network authentication protocol designed to provide secure user authentication across open networks. It uses tickets to allow nodes to prove their identity in a secure manner.
+
+## @How Kerberos Works
+-Kerberos works by issuing a ticket-granting ticket (TGT) when a user logs in. Once the TGT is obtained, it can be used to request service tickets for specific resources.
+This ensures that passwords are never sent over the network.
+
+## @Importance in Active Directory
+-In Active Directory, Kerberos is the default authentication protocol. It allows users to securely log in, access resources, and ensure that credentials are protected.
+
+## @My Analysis
+-I monitored Kerberos ticket events in the security logs.
+I verified that the TGTs and service tickets were issued correctly, and I ensured that each authentication step was logged as expected.
