@@ -7,7 +7,7 @@
 -I configured the relevant GPOs and ensured these settings were propagated across the domain.
 
 ## @Log Analysis
--After enabling the audit, I reviewed the security logs for logon attempts, logoffs, and object access.
+-After enabling the audit, I reviewed the security logs for logon/logoff attempts; 4624 (Successful Logon) and 4625 (Failed Logon), and object access.
 
 ## @Findings
 -This allowed me to confirm that auditing was working properly, ensuring visibility into user and object access events.
