@@ -2,12 +2,23 @@
 
 ## @Configuration Changes
 -I enabled success and failure auditing for logon events and object access within Group Policy.
+-I implemented restrictions for the Ctrl+Alt+Del options menu to limit end-user access to critical system functions.
 
 ## @Applied Settings
 -I configured the relevant GPOs and ensured these settings were propagated across the domain.
+-In [ctrl+alt+del] options;
+  *Removed Task Manager: Enabled (to prevent users from killing system processes).
+  *Removed Change Password: Enabled (to enforce password management through official channels).
+  *Removed Logoff / Lock: Enabled based on specific workstation security requirements
 
 ## @Log Analysis
 -After enabling the audit, I reviewed the security logs for logon/logoff attempts; 4624 (Successful Logon) and 4625 (Failed Logon), and object access.
+-I monitored for any unauthorized attempts to access restricted UI elements or bypass the enforced group policies
+
+## @Hardening Success 
+Confirmed that the GPO and registry-level changes successfully reduced the "attack surface" on the client side by preventing users from interfering with system-level operations
+via the secure attention sequence (SAS).
 
 ## @Findings
 -This allowed me to confirm that auditing was working properly, ensuring visibility into user and object access events.
+-Some system changes may drasticaly increase safety level on machines
