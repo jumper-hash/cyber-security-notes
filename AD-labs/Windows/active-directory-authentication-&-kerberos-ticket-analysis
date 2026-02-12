@@ -15,7 +15,7 @@
 
 @Logon Type analysis
     Analyzed Event ID 4624
-    Identified different logon types:
+  #Identified different logon types:
     2 → Interactive (local logon)
     3 → Network (SMB access)
     10 → RemoteInteractive (RDP – theoretical analysis)
