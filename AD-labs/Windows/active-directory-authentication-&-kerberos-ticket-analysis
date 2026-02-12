@@ -3,8 +3,8 @@
     -\\192.168.100.1\share (IP address)
     -\\dc.lab.local\share (DNS name)
   #Observed authentication differences in Security Event Log (4624):
-    -IP → NTLMv2
-    -DNS → Kerberos
+    -IP -> NTLMv2
+    -DNS -> Kerberos
     -Verified in event details:
     -Logon Type = 3 (Network logon)
     -Authentication Package changed depending on connection method
