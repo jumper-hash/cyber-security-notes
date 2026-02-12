@@ -37,6 +37,7 @@
     Enabled privilege ≠ administrative rights
     Many privileges appear but are disabled by default
     SeChangeNotifyPrivilege allows directory traversal but not data access
+
 @Local Administrator privilege comparison
   #Added user to local Administrators group
     Re-ran:  whoami /all
