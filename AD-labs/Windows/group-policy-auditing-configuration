@@ -1,24 +1,36 @@
-# Analysis of Group Policy Auditing
+@Configuration Changes
+ #Audit Policy Setup
+  Enabled success and failure auditing for logon events
+  Enabled auditing for object access within Group Policy
+ #User Interface Restrictions
+  Implemented restrictions for the Ctrl+Alt+Del options menu
+  Limited end-user access to critical system functions
 
-## @Configuration Changes
--I enabled success and failure auditing for logon events and object access within Group Policy.
--I implemented restrictions for the Ctrl+Alt+Del options menu to limit end-user access to critical system functions.
+@Applied Settings
+ #GPO Propagation
+  Configured the relevant GPOs
+  Ensured settings were propagated across the domain
+ #Ctrl+Alt+Del Options
+  Removed Task Manager: Enabled -> prevent users from killing system processes
+  Removed Change Password: Enabled -> enforce password management through official channels
+  Removed Logoff / Lock: Enabled based on specific workstation security requirements
 
-## @Applied Settings
--I configured the relevant GPOs and ensured these settings were propagated across the domain.
--In [ctrl+alt+del] options;
-  *Removed Task Manager: Enabled (to prevent users from killing system processes).
-  *Removed Change Password: Enabled (to enforce password management through official channels).
-  *Removed Logoff / Lock: Enabled based on specific workstation security requirements
+@Log Analysis
+ #Security Event Monitoring
+  Reviewed security logs for logon and logoff attempts
+  Analyzed Event ID 4624 -> Successful Logon
+  Analyzed Event ID 4625 -> Failed Logon
+  Monitored object access events
+ #Policy Enforcement Tracking
+  Monitored for unauthorized attempts to access restricted UI elements
+  Checked for attempts to bypass enforced group policies
 
-## @Log Analysis
--After enabling the audit, I reviewed the security logs for logon/logoff attempts; 4624 (Successful Logon) and 4625 (Failed Logon), and object access.
--I monitored for any unauthorized attempts to access restricted UI elements or bypass the enforced group policies
+@Hardening Success
+ #Attack Surface Reduction
+  Confirmed GPO and registry-level changes successfully reduced the attack surface
+  Prevented users from interfering with system-level operations via Secure Attention Sequence (SAS)
 
-## @Hardening Success 
-Confirmed that the GPO and registry-level changes successfully reduced the "attack surface" on the client side by preventing users from interfering with system-level operations
-via the secure attention sequence (SAS).
-
-## @Findings
--This allowed me to confirm that auditing was working properly, ensuring visibility into user and object access events.
--Some system changes may drasticaly increase safety level on machines
+@Findings
+ #Visibility and Safety
+  Confirmed auditing is working properly to ensure visibility into user and object access
+  Verified that specific system changes drastically increase the safety level on machines
