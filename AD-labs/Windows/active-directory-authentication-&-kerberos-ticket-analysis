@@ -9,9 +9,9 @@
     -Logon Type = 3 (Network logon)
     -Authentication Package changed depending on connection method
   #Key conclusion:
-    -Kerberos requires SPN and hostname resolution
-    -Using IP forces fallback to NTLM
-    -This behavior is important in NTLM relay and pass-the-hash attack scenarios
+    Kerberos requires SPN and hostname resolution
+    Using IP forces fallback to NTLM
+    This behavior is important in NTLM relay and pass-the-hash attack scenarios
 
 @Logon Type analysis
     Analyzed Event ID 4624
