@@ -1,0 +1,57 @@
+@Red Team Simulation vs. Blue Team Analysis
+#System Information
+OS: CentOS 7 (Kernel 3.10)
+Objective: Attack technique mechanics and forensic artifact identification
+
+@Initial Access & Enumeration
+#Red Team Actions
+Port enumeration -> ss -tulpn
+Identify UID 0 users -> cat /etc/passwd | grep :0:
+SUID file search -> find / -perm -4000 -type f
+Sudo privilege check -> sudo -l
+#Blue Team Artifacts
+Sudo usage logs in /var/log/secure
+Process execution tracking in audit.log
+Note: Local enumeration is stealthy; detection requires HIDS/EDR correlation
+#Conclusion
+Enumeration targets the attack surface; detection depends on event correlation
+
+@Privilege Escalation – SUID Backdoor
+#Red Team Actions
+Execution: cp /bin/bash /tmp/.sysbash; chmod 4755 /tmp/.sysbash
+Trigger: /tmp/.sysbash -p -> grants instant root shell without password
+#Blue Team Artifacts
+New SUID binary in non-standard location (/tmp)
+Timestamp modifications on system binaries
+auditd alerts for chmod operations on sensitive paths
+#Detection
+Command: find / -perm -4000 -type f -> identifies illegitimate SUID files
+
+@Persistence Mechanisms
+#Cron Job Injection
+Action: Scheduled task creation in /etc/crontab or /var/spool/cron/
+Artifact: New entries in /var/log/cron; modified timestamps on cron directories
+#SSH Key Injection
+Action: Appending rogue public key to ~/.ssh/authorized_keys
+Artifact: Log entries in /var/log/secure showing "Accepted publickey"
+Conclusion: New SSH keys in production are critical security events
+
+@Defense Evasion & Obfuscation
+#History Tampering
+Action: history -c; unset HISTFILE
+Blue Insight: Only clears current bash session history; does not affect sudo logs or auditd
+#Process Hiding
+Action: Renaming binaries (e.g., cp /bin/sleep /tmp/.kworker)
+Artifact: Processes running from /tmp or /dev/shm; identifiable via /proc/[PID]/exe
+Conclusion: Any process executing from world-writable directories is highly suspicious
+
+@Key Security Takeaways
+#Attack Mechanics
+Attacks rely on misconfigurations (SUID, weak permissions, cron, SSH keys)
+Every action leaves a footprint: timestamps, log entries, or file changes
+#Detection Strategy
+Requires a system baseline to identify "normal" vs. "malicious" behavior
+Continuous auditing of UID 0 accounts and file integrity (e.g., AIDE)
+#Competency Shift
+Focus moves from basic IT support to Analytical Security Thinking
+Understanding the "why" behind system artifacts and privilege escalation
