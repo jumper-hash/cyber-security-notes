@@ -4,7 +4,7 @@
     LAN Interface (enp0s8) -> Gateway IP: 192.168.10.1/24
     Client Node -> IP: 192.168.10.100 (Gateway/DNS pointed to Router)
   #Kernel Level Routing (Layer 3)
-    Configuration: /etc/sysctl.conf]
+    Configuration: /etc/sysctl.conf
     Key Parameter: net.ipv4.ip_forward=1
     Function: Enables the kernel to act as a router by forwarding packets between interfaces
     Verification: sysctl -p to commit changes without reboot
