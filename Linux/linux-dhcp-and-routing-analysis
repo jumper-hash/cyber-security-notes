@@ -3,7 +3,7 @@
     - Routing: IP Forwarding enabled via sysctl (net.ipv4.ip_forward=1)
     - DHCP Server: isc-dhcp-server configured for subnet 192.168.10.0/24
     - DNS Server: BIND9 active for local name resolution (my.network)
-    - NAT: iptables POSTROUTING MASQUERADE on WAN interfasce (enp0s3)
+    - NAT: iptables POSTROUTING MASQUERADE on WAN interface (enp0s3)
   #Technical Troubleshooting
     - Issue: DHCP service failed to start (Status: Failed)
     - Root Cause: Subnet declaration mismatch in dhcpd.conf
