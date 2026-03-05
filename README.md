@@ -10,6 +10,7 @@ Linux Administration: System hardening, securing services, and automation script
 Networking: Cisco Packet Tracer projects (VLANs, ACLs, and routing).
 
 #Current Focus
+
    [x] Windows Server & AD Fundamentals (GPO)
    [x] Linux Security Hardening
    [x] Cisco Packet Tracer Project
