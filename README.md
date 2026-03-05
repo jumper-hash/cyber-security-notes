@@ -1,22 +1,17 @@
 @Cyber Security & Systems Administration Lab
--Personal knowledge base and documentation of my hands-on experience in IT security and infrastructure.
+Personal knowledge base and documentation of my hands-on experience in IT security and infrastructure.
 
 #Overview
--This repository serves as a Proof of Work for my learning journey in Cybersecurity. Instead of just reading theory, I focus on building labs, configuring services, and understanding how to defend (and later attack) modern infrastructures.
+This repository serves as a Proof of Work for my learning journey in Cybersecurity. I focus on building labs, configuring services, and hardening infrastructures.
 
 #What's Inside?
--Active Directory & Windows Server: GPO hardening, auditing policies, and managing domain environments.
-
--Networking: Understanding protocols through practical lab interactions between clients and servers.
-
--Blue Team Practice: Detection patterns, Event ID analysis, and monitoring.
+Windows Server & AD: Domain Controller setup, GPO hardening, and identity management.
+Linux Administration: System hardening, securing services, and automation scripts.
+Networking: Cisco Packet Tracer projects (VLANs, ACLs, and routing).
 
 #Current Focus
-
-  [X] Windows Server & AD Fundamentals
-
-  [ ] Linux Security Hardening (In Progress)
-
-  [ ] Cross-platform integration & Centralized Logging
-
+  [x] Windows Server & AD Fundamentals (GPO)
+  [x] Linux Security Hardening
+  [x] Cisco Packet Tracer Project
+  [ ] Centralized Logging
   [ ] Vulnerability Research (Upcoming)
