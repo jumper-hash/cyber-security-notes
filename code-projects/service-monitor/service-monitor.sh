@@ -14,9 +14,9 @@ echo -e "    script started with PID: ${red}$$ ${none}"
 function default(){
     timeStamp=$(date '+%d-%m-%Y %H:%M:%S')
     logFile="/var/log/service-monitor/$(date '+%d-%m-%Y').log"
-    echo -e "---------------------------------------- "
-    echo -e "---------------------------------------- " >> "$logFile"
-    echo -e "Status \"$timeStamp\" started: " >> "$logFile"
+    echo "---------------------------------------- "
+    echo "---------------------------------------- " >> "$logFile"
+    echo "Status \"$timeStamp\" started: " >> "$logFile"
 
     for item in "${services[@]}"; do
         if [ $(sudo systemctl is-active "$item") == 'inactive' ]; then
@@ -31,7 +31,7 @@ function default(){
 function failure1(){
     if [ $(systemctl is-active "$1") != 'active' ]; then
         echo -e " # ${blue}$1${none} not working, ${yellow}retry in 5s...${none}"
-        echo -e " # $1 not working, retrying" >> "$logFile"
+        echo " # $1 not working, retrying" >> "$logFile"
         sudo systemctl restart $1
         sleep 5
         failure2 $1
@@ -43,7 +43,7 @@ function failure1(){
 function failure2(){
     if [ $(sudo systemctl is-active "$1") != 'active' ]; then
         echo -e " # ${blue}$1${none} not working after retry, ${red}skipping${none}"
-        echo -e " # $1 not working after retry, skipping." >> "$logFile"
+        echo " # $1 not working after retry, skipping." >> "$logFile"
     else
         success $1
     fi
@@ -51,7 +51,7 @@ function failure2(){
 
 function success(){
     echo -e "    ${blue}$1${none} is currently  ${green}running${none}."
-    echo -e "    $1 is currently  running." >> "$logFile"
+    echo "    $1 is currently  running." >> "$logFile"
 }
 
 if [ ! -d "$logDir" ]; then
