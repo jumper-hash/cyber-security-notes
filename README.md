@@ -18,6 +18,8 @@
    
    [x] Cisco Networking (OSPF, ACL, VLAN)
    
-   [x] Scripting (Bash File Scanner)
+   [x] Scripting
+         [x] Bash scripting
+         [ ] Shell scriptng
    
    [ ] Centralized Logging & SIEM Integration
