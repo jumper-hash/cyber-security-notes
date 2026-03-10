@@ -9,6 +9,14 @@
     Search Domain: Configured 'lab.local' for short-name resolution
     Optimization: Disabled mDNS (avahi) to prioritize unicast DNS queries
 
+@Operational Verification (DNS)
+  #Query Testing
+    dig -t SRV _ldap._tcp.lab.local: Verified DC service location records
+    nslookup google.com: Confirmed successful recursion through Forwarders
+    #Log Auditing
+    DNS Manager (Windows): Monitored "Cached Lookups" for external domain resolution
+    Journalctl -u sssd: Inspected LDAP search queries during user authentication
+
 @Technical Nuances & "Under-the-Hood" Observations
   #The IPv6/AAAA Latency Trap
     Symptom: 5-10 second delay during initial 'apt update' or 'ping' commands.
