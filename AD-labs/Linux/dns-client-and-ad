@@ -13,7 +13,7 @@
   #Query Testing
     dig -t SRV _ldap._tcp.lab.local: Verified DC service location records
     nslookup google.com: Confirmed successful recursion through Forwarders
-    #Log Auditing
+  #Log Auditing
     DNS Manager (Windows): Monitored "Cached Lookups" for external domain resolution
     Journalctl -u sssd: Inspected LDAP search queries during user authentication
 
