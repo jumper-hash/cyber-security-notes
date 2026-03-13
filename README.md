@@ -10,6 +10,7 @@
    Networking: Cisco Packet Tracer projects including OSPF, Router-on-a-Stick, and ACLs.
    Code Projects: Custom Bash tools like file-scanner for automated system checks.
 
+
 #Current Focus
 
    [x] Windows Server & AD Hardening
