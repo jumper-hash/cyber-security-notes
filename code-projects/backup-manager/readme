@@ -1,0 +1,30 @@
+@backup-manager
+  backup-manager is a Bash utility script designed to create secure, encrypted archives of critical system directories.
+  It automates the process of compressing data, encrypting it with AES256 via GnuPG, and managing disk space by rotating old backups.
+  
+  #Features
+    -Secure AES256 Encryption: Utilizes GPG symmetric encryption with a dedicated passphrase file for high-level data protection.
+    -Automated Directory Archiving: Packages multiple system paths into compressed .tar.gz format.
+    -Smart Retention Policy: Automatically maintains a clean environment by keeping only the 3 most recent backups and removing older archives.
+    -Comprehensive Logging: Redirects all standard output and errors to /var/log/backup-manager.log for detailed audit trails.
+    -Performance Tracking: Calculates and logs the exact duration of the backup process in seconds using high-precision timestamps.
+  
+  #How It Works
+    The script executes a streamlined pipeline: it first validates the destination path, then streams a compressed tarball directly into a GPG encryption process to ensure data is never stored unencrypted.
+    It captures the execution exit code to verify success before checking the backup count. If more than 3 archives exist, it identifies the oldest file using a time-sorted list (ls -tr) and deletes it to prevent storage overflow.
+  
+  #Decryption
+    -To restore your data, you must use GPG to decrypt the .gpg file back into a compressed archive.
+    -Run the following command (replace FILENAME with your actual backup file):
+    gpg --batch --passphrase-file [password path] --decrypt FILENAME.tar.gz.gpg > restored_backup.tar.gz
+    -Once decrypted, you can extract the contents using: tar -xzf restored_backup.tar.gz
+  
+  #Configuration
+    -Password Management: The encryption passphrase must be stored in a plain text file named password located in the same directory as the script.
+    -Security Setup: For production environments, you must change the file owner to the root user and restrict permissions to prevent unauthorized access:
+    sudo chown root:root backup-manager.sh password
+    sudo chmod 700 backup-manager.sh password
+    -Service Customization: To change which files or folders are archived, you must manually add them to the directories_to_backup array inside the backup-manager.sh file.
+    -How to Edit: Open the script in a text editor (e.g., nano) and update the list:
+    directories_to_backup=( '/etc' '/var/www' '/home/user/docs' )
+    -Log & Backup Paths: The destination for archives (path) and the log file (log_path) can be adjusted directly in the variable definitions section of the script.
