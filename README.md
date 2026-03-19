@@ -1,5 +1,5 @@
 @Cyber Security & Systems Administration Lab
-   Personal knowledge base and documentation of my hands-on experience in IT security and infrastructure.
+   Personal knowledge base and documentation of my hands-on experience in IT security and infrastructure
 
 #Overview
    This repository serves as a Proof of Work for my learning journey in Cybersecurity. I focus on building labs, configuring services, and hardening infrastructures.
