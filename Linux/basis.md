@@ -1,62 +1,62 @@
-#ProcessesandPerformanceMonitoring
-  ##Static-Process-Analysis-(ps)
+# ProcessesandPerformanceMonitoring
+  ## Static-Process-Analysis-(ps)
     `ps aux`: full process list for all users with terminal info
     `ps -ef`: standard syntax for full process listing
     Fields: PID (Process ID), %CPU, %MEM, STAT (Process State), COMMAND
-  ##Dynamic-System-Monitoring-(top/htop)
+  ## Dynamic-System-Monitoring-(top/htop)
     `top` real-time monitor for CPU, RAM, and load average
     Hotkeys: P (Sort CPU), M (Sort RAM), k (Kill process), 1 (Per-core view)
     `htop`  interactive viewer with process tree and mouse support
     Benefit: visualizes parent - child relations and easy process signaling
-  ##Process-Termination-(Signals)
+  ## Process-Termination-(Signals)
     `kill [PID]` -> basic termination using SIGTERM
     `pkill [name]` / `killall [name]` -> termination by process name
     Signal -15 (SIGTERM) -> graceful shutdown (allows cleanup)
     Signal -9 (SIGKILL) -> forced immediate kill (no cleanup)
 
-#MemoryandSystemLoadAnalysis
-  ##Memory-Usage-(free)
+# MemoryandSystemLoadAnalysis
+  ## Memory-Usage-(free)
     `free -h` -> human-readable output of RAM and Swap
     Insight: available field is more important than used due to Linux caching
     Note: constant swap usage (si/so) indicates memory exhaustion
-  ##Performance-Statistics-(vmstat)
+  ## Performance-Statistics-(vmstat)
     `vmstat 1` -> reports stats every second to identify bottlenecks
     r (running) -> processes waiting for CPU runtime
     b (blocked) -> processes in uninterruptible sleep (usually I/O wait)
     wa (iowait) -> high value indicates slow disk or storage issues
-  ##System-Uptime-and-Load
+  ## System-Uptime-and-Load
     `uptime` -> shows time since boot and load average
     Load Interpretation: 1.00 on a 1-core system means 100% utilization
 
-#DiskandFileSystemManagement
-  ##SpaceandUsageTracking
+# DiskandFileSystemManagement
+  ## SpaceandUsageTracking
     `df -h` -> disk space usage per filesystem
     `du -sh *` -> summary of space used by directories in current path
     `du -xh --max-depth=1 /` -> finds large folders without crossing filesystems
-  ##File-Identification-and-Location
+  ## File-Identification-and-Location
     `ls -lah` -> detailed list including hidden files and sizes
     `ls -lt` -> sorts files by modification time (newest first)
     `find / -name "*.log"` -> global search for log files
     `find / -size +100M` -> identifies files larger than 100MB
-  ##PermissionsandOwnershipObservation
+  ## PermissionsandOwnershipObservation
     `stat [file]` -> reveals detailed metadata, Inode, and timestamps
     Root Edit Behavior: editing a user-owned file with nano as root keeps original owner
     Reason: nano overwrites content in the existing container -> ownership remains with user
     To change owner: `chown root:root [file]` required after modification
 
-#Log-Management-and-Networking
-  ##Log-Inspection-Tools
+# Log-Management-and-Networking
+  ## Log-Inspection-Tools
     `tail -f /var/log/syslog` -> real-time monitoring of system events
     `less /var/log/auth.log` -> searchable view of authentication logs
     Search in less: /pattern -> find, n -> next match
-  ##Network-Connectivity-and-Sockets
+  ## Network-Connectivity-and-Sockets
     `ss -tulnp` -> lists active TCP/UDP listening ports and PIDs
     `ping [address]` -> verifies ICMP reachability
     `curl -I [url]` -> fetches HTTP headers to verify service response
     `netstat -tulnp` -> legacy tool for socket analysis (replaced by `ss`)
 
-#System-Diagnostic-Mindset
-  ##Issue-Categorization-and-Tooling
+# System-Diagnostic-Mindset
+  ## Issue-Categorization-and-Tooling
     CPU Bottleneck -> analyze via top and vmstat (r column)
     Memory Exhaustion -> verify with free and vmstat (si/so columns)
     Disk/IO Issues -> check iowait (wa) in vmstat, then df/du
