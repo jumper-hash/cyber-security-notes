@@ -1,4 +1,4 @@
-## filescanner
+# filescanner
 filescanner is a Bash utility script designed to scan directories and audit file metadata based on specific ownership criteria.
 It allows users to quickly filter files by owner and group, providing a detailed breakdown of permissions and file links.
 
