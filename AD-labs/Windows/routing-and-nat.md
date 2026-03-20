@@ -1,10 +1,10 @@
-#Windows-Server-Edge-Routing-and-NAT-Infrastructure
-  ##Network-Services-and-Configuration
+# Windows-Server-Edge-Routing-and-NAT-Infrastructure
+  ## Network-Services-and-Configuration
     Role: Remote Access Service (RRAS) configured for IPv4 Routing
     NAT Implementation: Port Address Translation (PAT) on WAN interface
     Interface Setup: Dual-homed configuration (External WAN / Internal LAN)
     IP Forwarding: Enabled system-wide to bridge isolated subnets
-  ##Technical-Troubleshooting-(The "NAT Nuances")
+  ## Technical-Troubleshooting-(The "NAT Nuances")
     Issue 1: Total lack of external connectivity on Linux Client
     Root Cause: RRAS Interface Polarity Mismatch
     Nuance: In Windows NAT, the "Public" role was assigned to the LAN card. This caused the server to attempt NAT on incoming local traffic instead of outgoing WAN traffic.
@@ -18,11 +18,11 @@
     Nuance: Linux was attempting to route via IPv6 first. Since the Windows NAT was only handling IPv4, the client hung while waiting for IPv6 timeouts.
     Resolution: Modified /etc/gai.conf to prioritize IPv4 precedence, ensuring immediate routing via the NAT gateway.
 
-#Traffic-Inspection-and-Verification-(NAT/Routing)
-  ##Connectivity-Diagnostics
+# Traffic-Inspection-and-Verification-(NAT/Routing)
+  ## Connectivity-Diagnostics
     ip route: Verification of default gateway (`192.168.100.1`) on enp0s3
     `traceroute -n 8.8.8.8`: Hop analysis confirming the first jump ends at the Windows Server
     curl -I http://google.com: Verification of Layer 7 connectivity through the NAT tunnel
-  ##Under-the-Hood-Observations
+  ## Under-the-Hood-Observations
     Packet Flow: Observed packet encapsulation as it moves from LAN (Private IP) to WAN (Public IP)
     ICMP Filtering: Identified that Windows NAT sometimes drops ICMP Echo Requests while allowing TCP/UDP; verified via browser-based testing
