@@ -1,5 +1,5 @@
-#Linux-System-Architecture
-  ##Kernel-vs-User-Space
+# Linux-System-Architecture
+  ## Kernel-vs-User-Space
     Kernel manages hardware: CPU scheduling, memory, I/O, networking, filesystems
     User programs communicate via Syscalls -> interface between user space and kernel
     Common Syscalls: execve (run), open (access), read/write (I/O), mmap (memory)
