@@ -1,43 +1,43 @@
-#Kerberos-ticket-lifecycle-(klist analysis)
+# Kerberos-ticket-lifecycle-(klist analysis)
   Executed:  klist
-  ##Observed:
+  ## Observed:
     TGT (Primary ticket)
     Multiple Service Tickets (CIFS, HOST, LDAP depending on usage)
-  ##Compared:
+  ## Compared:
     Standard user vs local admin ticket count
     Admin session had additional service tickets (delegation / service related)
 
-#Ticket-purge-behavior
+# Ticket-purge-behavior
   Executed:  klist purge
-  ##Observed:
+  ## Observed:
     TGT and service tickets removed
     After short delay, system automatically requested new TGT
-  ##Conclusion:
+  ## Conclusion:
     Windows automatically retrieves new TGT when needed
     Ticket lifecycle is dynamic and usage-driven
-  ##Important-security-insight:
+  ## Important-security-insight:
     If attacker steals TGT -> possible Pass-the-Ticket attack
     Ticket presence = active authentication context
 
-#Kerberos-auditing-events
-  ##Identified-relevant-Event-IDs:
+# Kerberos-auditing-events
+  ## Identified-relevant-Event-IDs:
   4768 → TGT requested
   4769 → Service ticket requested
-  ##Correlated:
+  ## Correlated:
     -Account Name
     -Service Name
     -Client Address
-  ##Understood:
+  ## Understood:
     Service ticket requests reveal which services user accessed
     Useful for detecting lateral movement or unusual service usage
 
-#Security-mindset-gained
-  ##Understood-difference-between:
+# Security-mindset-gained
+  ## Understood-difference-between:
     Authentication protocol selection
     Logon type context
     Privilege vs group membership
     TGT vs Service Ticket
-  ##Observed-how:
+  ## Observed-how:
     DNS usage affects authentication protocol
     Token generation affects privileges
     Kerberos tickets are service-specific
