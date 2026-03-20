@@ -11,7 +11,7 @@
     Offer: Server proposal of IP configuration (`192.168.10.120`)
     Request: Client formal request for the offered IP address
     Acknowledgment (ACK): Server confirmation and lease finalization
-  ## DNSandNATFlowVerification
+  ## DNS-and-NAT-Flow-Verification
     DNS Queries: Standard A-record lookups captured on UDP port 53
     NAT Verification: Observed source IP translation from LAN to WAN IP
     Peer Address: Identification of remote socket endpoints during active sessions
