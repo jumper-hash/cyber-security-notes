@@ -46,14 +46,14 @@
     Symptoms: high load, low CPU usage, high %wa (iowait), high b (blocked) count
     Detection: `ps -eo pid,stat,cmd | grep D` -> find processes stuck in I/O
     Analysis:` iostat -x 1` -> detailed disk performance and latency tracking
-  ## MemoryandSwapPressure
+  ## Memory-and-Swap-Pressure
     si/so (swap in/out) in vmstat -> reliable indicator of physical RAM exhaustion
     Increasing swap activity causes massive performance degradation (thrashing)
   ## Tracing-Execution-(`strace`)
     `strace [command]` -> captures real-time communication with the kernel
     Used to identify why a program hangs or fails to find configuration files
 
-# FilesystemandStorageLogic
+# File-system-and-Storage-Logic
   ## Mounting-Mechanism
     Filesystem is a logical layer; mounting attaches a structure to a directory
     `cat /proc/mounts` -> shows current kernel-level mount states
