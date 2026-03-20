@@ -1,28 +1,28 @@
-# Linux-Web-and-File-Services-Implementation-(Secure)
-  ## Apache2-HTTP-and-HTTPS
+# Linux Web and File Services Implementation (Secure)
+  ## Apache2 HTTP and HTTPS
     Standard Web: Apache2 listening on Port 80
     Secure Web: SSL/TLS enabled on Port 443
     Certificate: RSA 2048-bit self-signed (`/etc/ssl/certs/apache-selfsigned.crt`)
     Verification: Confirmed HTTPS handshake and encrypted traffic via browser
-  ## vsftpd-FTP-and-FTPS
+  ## vsftpd FTP and FTPS
     Service: vsftpd (Very Secure FTP Daemon)
     Mode: Explicit FTP over TLS (FTPS)
     Config: `/etc/vsftpd.conf (ssl_enable=YES, force_local_logins_ssl=YES)`
     Security: RSA 2048-bit self-signed cert (`/etc/ssl/private/vsftpd.pem`)
     Verification: 230 Login successful via TLS-encrypted session
 
-# Operational-Diagnostics-and-Traffic-Analysis
-  ## Socket-Monitoring-(`ss -tulnp`)
+# Operational Diagnostics and Traffic Analysis
+  ## Socket Monitoring (`ss  tulnp`)
     Port 80/443: HTTP/HTTPS active for web traffic
     Port 21: FTP/FTPS control channel active
-  ## Network-Forensics-(Wireshark)
+  ## Network Forensics (Wireshark)
     Plaintext Risks: Identified exposed credentials in standard HTTP/FTP traffic
     Encryption: Verified transition to encrypted "Application Data" after SSL/TLS implementation
-  ## Peer-Analysis
+  ## Peer Analysis
     Status: Successful identification of remote socket endpoints and secure handshake sequences
 
-# Security-Knowledge-Base
-  ## Vulnerability-Assessment
+# Security Knowledge Base
+  ## Vulnerability Assessment
     Sniffing: Prevention of plaintext credential theft via TLS
     Brute Force: Understanding of Hydra-based dictionary attacks on FTP
     Backdoors: Awareness of version-specific exploits (e.g., vsftpd 2.3.4)

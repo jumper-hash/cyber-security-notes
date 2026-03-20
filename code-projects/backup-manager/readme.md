@@ -1,4 +1,4 @@
-# backup-manager
+# backup manager
   backup-manager is a Bash utility script designed to create secure, encrypted archives of critical system directories.
   It automates the process of compressing data, encrypting it with AES256 via GnuPG, and managing disk space by rotating old backups.
   
@@ -9,7 +9,7 @@
     -Comprehensive Logging: Redirects all standard output and errors to /var/log/backup-manager.log for detailed audit trails.
     -Performance Tracking: Calculates and logs the exact duration of the backup process in seconds using high-precision timestamps.
   
-  ## How-It-Works
+  ## How It Works
     The script executes a streamlined pipeline: it first validates the destination path, then streams a compressed tarball directly into a GPG encryption process to ensure data is never stored unencrypted.
     It captures the execution exit code to verify success before checking the backup count. If more than 3 archives exist, it identifies the oldest file using a time-sorted list (ls -tr) and deletes it to prevent storage overflow.
   
