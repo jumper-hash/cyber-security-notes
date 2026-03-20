@@ -1,4 +1,4 @@
-# ProcessesandPerformanceMonitoring
+# Processes-and-Performance-Monitoring
   ## Static-Process-Analysis-(ps)
     `ps aux`: full process list for all users with terminal info
     `ps -ef`: standard syntax for full process listing
@@ -14,7 +14,7 @@
     Signal -15 (SIGTERM) -> graceful shutdown (allows cleanup)
     Signal -9 (SIGKILL) -> forced immediate kill (no cleanup)
 
-# MemoryandSystemLoadAnalysis
+# Memory-and-System-Load-Analysis
   ## Memory-Usage-(free)
     `free -h` -> human-readable output of RAM and Swap
     Insight: available field is more important than used due to Linux caching
@@ -28,8 +28,8 @@
     `uptime` -> shows time since boot and load average
     Load Interpretation: 1.00 on a 1-core system means 100% utilization
 
-# DiskandFileSystemManagement
-  ## SpaceandUsageTracking
+# Diskand-File-System-Management
+  ## Spaceand-Usage-Tracking
     `df -h` -> disk space usage per filesystem
     `du -sh *` -> summary of space used by directories in current path
     `du -xh --max-depth=1 /` -> finds large folders without crossing filesystems
@@ -38,7 +38,7 @@
     `ls -lt` -> sorts files by modification time (newest first)
     `find / -name "*.log"` -> global search for log files
     `find / -size +100M` -> identifies files larger than 100MB
-  ## PermissionsandOwnershipObservation
+  ## Permissions-and-Ownership-Observation
     `stat [file]` -> reveals detailed metadata, Inode, and timestamps
     Root Edit Behavior: editing a user-owned file with nano as root keeps original owner
     Reason: nano overwrites content in the existing container -> ownership remains with user
