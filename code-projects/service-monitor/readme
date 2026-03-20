@@ -1,19 +1,19 @@
-@service-monitor
-  #service-monitor is a Bash utility script designed to monitor systemd services and provide automated "health check" and recovery actions.
+# service-monitor
+  ## service-monitor-is-a-Bash-utility-script-designed-to-monitor-systemd-services-and-provide-automated-"health check" and recovery actions.
   It allows users to track the status of critical system components (like NetworkManager or Apache) and ensures they are restarted automatically upon failure.
 
-  #Features
+  ## Features
     -Service Health Monitoring: Continuously checks the status of a predefined list of systemd services.
     -Automated Recovery: Automatically attempts to restart services that are in an inactive or failed state.
     -Dynamic Loop Control: Interactive prompt to set the monitoring interval (in seconds) or run as a one-time audit.
     -Detailed System Logging: Generates timestamped audit trails in /var/log/service-monitor/ for long-term troubleshooting.
     -Color-Coded Feedback: Provides clear, visual status updates in the terminal using ANSI escape codes for Success (Green), Warning (Yellow), and Failure (Red).
 
-  #How It Works
+  ## How-It-Works
     The script utilizes a robust execution flow involving systemctl, conditional logic, and infinite loops.
     It iterates through a service array and evaluates the is-active metadata. If a service doesn't match the 'active' criteria, it triggers a multi-stage recovery pipeline (failure1 -> failure2) that attempts a restart, waits for stabilization (sleep), and performs a final audit before logging the outcome.
 
-  #Configuration
+  ## Configuration
     -Service Customization: To monitor different services, you must manually modify the services array at the beginning of the script.
     -How to Edit: Open the file in any text editor (e.g., nano or vim) and update the list:
     services=( "your-service.service" "another-one.service" )
