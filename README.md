@@ -9,6 +9,7 @@
    Linux Security: Hardening services, SSH simulation, NAT/routing, and user management.
    Networking: Cisco Packet Tracer projects including OSPF, Router on a Stick, and ACLs.
    Code Projects: Custom Bash tools like file scanner for automated system checks.
+   Hack The Box labs: Labs walkthrough
 
 
 # Current Focus
