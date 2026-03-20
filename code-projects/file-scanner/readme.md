@@ -1,14 +1,14 @@
-@filescanner
-#filescanner is a Bash utility script designed to scan directories and audit file metadata based on specific ownership criteria.
+# filescanner
+## filescanner-is-a-Bash-utility-script-designed-to-scan-directories-and-audit-file-metadata-based-on-specific-ownership-criteria.
 It allows users to quickly filter files by owner and group, providing a detailed breakdown of permissions and file links.
 
-#Features
+## Features
 -Dynamic Path Selection: Search within a specified directory or default to the current working directory.
 -Ownership Filtering: Filter results by a specific User (Owner) and Group.
 -Wildcard Support: Use * or leave fields empty to list all files regardless of ownership.
 -Detailed Output: Displays full ls -la style information, including privileges, link counts, and timestamps.
 -File Counter: Provides a summary of the total number of files matching the criteria at the end of the execution.
 
-#How It Works
+## How-It-Works
 The script utilizes a complex pipeline (find, grep, xargs, and ls) to parse file attributes into a while loop.
 It then evaluates the owner and group variables against the system's file metadata to decide whether to display the file to the user.
