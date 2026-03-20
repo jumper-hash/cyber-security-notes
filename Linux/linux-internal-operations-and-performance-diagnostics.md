@@ -3,67 +3,67 @@
     Kernel manages hardware: CPU scheduling, memory, I/O, networking, filesystems
     User programs communicate via Syscalls -> interface between user space and kernel
     Common Syscalls: execve (run), open (access), read/write (I/O), mmap (memory)
-  ##Core-Philosophy
+  ## Core-Philosophy
     Everything is a file (or behaves like one)
     Process representation -> `/proc`
     Hardware devices -> `/dev/sdX`
     Memory telemetry -> `/proc/meminfo`
 
-#Process-Anatomy-and-State
-  ##Internal-Structure
+# Process-Anatomy-and-State
+  ## Internal-Structure
     Process components: PID, User context (UID/GID), memory space, file descriptors
     Process directory: `/proc/[PID]/` contains metadata and operational state
     `/proc/[PID]/fd/` -> list of all open file descriptors
     `/proc/[PID]/status` -> current process state and resource usage
-  ##Process-States
+  ## Process-States
     R (Running/Ready) -> currently using CPU or waiting for a slice
     S (Interruptible Sleep) -> waiting for an event (e.g. keyboard input)
     D (Uninterruptible Sleep) -> process performing I/O via syscall; waiting for kernel
     Z (Zombie) -> finished process waiting for parent to acknowledge exit code
 
-#File-Descriptors-and-Redirection
-  ##Standard-Streams
+# File-Descriptors-and-Redirection
+  ## Standard-Streams
     0 -> stdin (input)
     1 -> stdout (output)
     2 -> stderr (error)
-  ##Redirection-Logic
+  ## Redirection-Logic
     `Command > out.txt` -> shell modifies file descriptor 1 before execution
     Sockets and hardware devices are managed as descriptors
     Processes write to descriptors, not directly to physical files
 
-#Deep-Performance-Metrics
-  ##Load-Average-Interpretation
+# Deep-Performance-Metrics
+  ## Load-Average-Interpretation
     Load Average -> count of processes in R (running) or D (uninterruptible sleep) state
     Load != CPU usage -> high load with low CPU indicates an I/O bottleneck
-  ##The-D-State-and-Kill-Limitation
+  ## The-D-State-and-Kill-Limitation
     SIGKILL (`kill -9`) sets a termination flag but cannot interrupt kernel-level code
     Processes in D-state are executing inside the kernel (waiting for storage/network)
     The signal is handled only after the process returns to user space
     If storage is dead, the process may hang indefinitely -> reboot often required
 
-#Advanced-Diagnostics-and-Bottlenecks
-  ##I/O Bottleneck Identification
+# Advanced-Diagnostics-and-Bottlenecks
+  ## I/O Bottleneck Identification
     Symptoms: high load, low CPU usage, high %wa (iowait), high b (blocked) count
     Detection: `ps -eo pid,stat,cmd | grep D` -> find processes stuck in I/O
     Analysis:` iostat -x 1` -> detailed disk performance and latency tracking
-  ##MemoryandSwapPressure
+  ## MemoryandSwapPressure
     si/so (swap in/out) in vmstat -> reliable indicator of physical RAM exhaustion
     Increasing swap activity causes massive performance degradation (thrashing)
-  ##Tracing-Execution-(`strace`)
+  ## Tracing-Execution-(`strace`)
     `strace [command]` -> captures real-time communication with the kernel
     Used to identify why a program hangs or fails to find configuration files
 
-#FilesystemandStorageLogic
-  ##Mounting-Mechanism
+# FilesystemandStorageLogic
+  ## Mounting-Mechanism
     Filesystem is a logical layer; mounting attaches a structure to a directory
     `cat /proc/mounts` -> shows current kernel-level mount states
     `lsblk` -> visualizes block device hierarchy
-  ##Tmpfs-Utility
+  ## Tmpfs-Utility
     Filesystem residing entirely in RAM -> volatile but extremely fast
     Commonly used for `/run` or `/tmp` to reduce disk I/O overhead
 
-#Operational-Principles
-##Final-Takeaways
+# Operational-Principles
+## Final-Takeaways
   Linux is a flow of resources: CPU -> RAM -> I/O -> Process
   High Load + Low CPU = Storage/Network problem
   Diagnostics must precede restarts to identify the root cause
