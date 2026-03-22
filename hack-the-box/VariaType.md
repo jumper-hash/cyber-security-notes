@@ -1,4 +1,4 @@
-# HackTheBox VariaType Full Chain Penetration Testing
+# HackTheBox VariaType Penetration Testing
 
 ## External Reconnaissance and Web Entry
     Network Mapping: Nmap scan of `10.129.13.110` leading to `variatype.htb` identification
