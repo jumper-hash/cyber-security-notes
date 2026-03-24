@@ -1,5 +1,5 @@
 # Docker Infrastructure and Nginx Implementation
-	## Nginx Containerized Web Service
+## Nginx Containerized Web Service
 		Standard Web: Nginx listening on Port 80 (Internal Container Port)
 		External Access: Host Port 3000 mapped to Container Port 80
 		Storage: Bind mount volume from `/docker/website` to `/usr/share/nginx/html`
