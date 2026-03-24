@@ -14,7 +14,8 @@
 	Port 80: Internal container socket verified via docker exec
 	
 ## .yaml File
-	`version: '3'
+	`
+	version: '3'
 	services:
       website:          
 	  image: nginx:latest
@@ -23,7 +24,8 @@
 	      - /docker/website:/usr/share/nginx/html
 	    ports:
 	      - "3000:80"
-	    restart: always`
+	    restart: always
+		`
 
 ## Network Isolation
 	Virtual Bridge: docker0 interface acting as the gateway for container traffic
