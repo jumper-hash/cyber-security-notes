@@ -14,7 +14,6 @@
 	Port 80: Internal container socket verified via docker exec
 	
 ## docker-compose.yaml
-	`
 	version: '3'
 	services:
       website:          
@@ -25,7 +24,6 @@
 	    ports:
 	      - "3000:80"
 	    restart: always
-	`
 
 ## Network Isolation
 	Virtual Bridge: docker0 interface acting as the gateway for container traffic
