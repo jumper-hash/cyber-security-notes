@@ -13,7 +13,7 @@
 	Port 3000: Docker-proxy active on host to relay traffic to Nginx container
 	Port 80: Internal container socket verified via docker exec
 	
-## .yaml File
+## docker-compose.yaml
 	`
 	version: '3'
 	services:
