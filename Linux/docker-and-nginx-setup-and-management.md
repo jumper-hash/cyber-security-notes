@@ -16,13 +16,13 @@
 ## .yaml File
 	`version: '3'
 	services:
-	  website:          
-		image: nginx:latest
+      website:          
+	  image: nginx:latest
 	    container_name: www
 	    volumes:
-	       - /docker/website:/usr/share/nginx/html
+	      - /docker/website:/usr/share/nginx/html
 	    ports:
-	       - "3000:80"
+	      - "3000:80"
 	    restart: always`
 
 ## Network Isolation
