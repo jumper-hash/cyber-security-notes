@@ -20,8 +20,6 @@
 	Certificate Path: Verified mount points for `/etc/nginx/certs` within the proxy container
 
 ## docker-compose.yaml File
-
-	`
 	version: '3'
 	services:
 	  privatebin:
@@ -44,10 +42,8 @@
 	      - ./https_keys:/etc/nginx/certs:ro
 	    depends_on:
 	      - privatebin
-	`
 
 ## nginix.conf
-	`
 	events {
     worker_connections 1024;
 	}
@@ -72,8 +68,6 @@
 	        }
 	    }
 	}
-	
-	`
 
 ## Network and Proxy Configuration
 
