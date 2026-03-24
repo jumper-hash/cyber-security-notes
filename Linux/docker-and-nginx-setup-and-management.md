@@ -33,4 +33,4 @@
 
 ## Troubleshooting and Forensics
 	Error 403 Forbidden: Diagnosed as missing index.html and directory permission mismatch
-	Permission Fix: Applied chmod 755 to host directory for container read access
+	Permission Fix: Applied `chmod 755` to host directory for container read access
