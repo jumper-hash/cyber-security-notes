@@ -79,4 +79,4 @@
 
 	Write Errors: Diagnosed as permission denied in `./data`. Fixed by aligning host directory ownership with container UID
 	Connectivity: Resolved upstream communication by using Docker service discovery (`http://privatebin:8080`)
-	Configuration Fix: Adjusted Nginx worker connections and SSL cipher suites for enhance
+	Configuration Fix: Adjusted Nginx worker connections and SSL cipher suites for enhanced security
