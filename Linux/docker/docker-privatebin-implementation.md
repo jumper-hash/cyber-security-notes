@@ -19,7 +19,7 @@
 	Syntax Validation: Corrected `.yaml` indentation and Nginx `.conf` block structures
 	Certificate Path: Verified mount points for `/etc/nginx/certs` within the proxy container
 
-## .yaml File
+## docker-compose.yaml File
 
 	`
 	version: '3'
@@ -44,6 +44,35 @@
 	      - ./https_keys:/etc/nginx/certs:ro
 	    depends_on:
 	      - privatebin
+	`
+
+## nginix.conf
+	`
+	events {
+    worker_connections 1024;
+	}
+	
+	http {
+		server {
+			listen 443 ssl;
+			server_name localhost;
+	
+			ssl_certificate /etc/nginx/certs/selfsigned.crt;
+			ssl_certificate_key /etc/nginx/certs/selfsigned.key;
+	
+			ssl_protocols TLSv1.2 TLSv1.3;
+			ssl_ciphers HIGH:!aNULL:!MD5;
+
+			location / {
+				proxy_pass http://privatebin:8080;
+				proxy_set_header Host $host;
+				proxy_set_header X-Real-IP $remote_addr;
+				proxy_set_header X-Forwarded-For $proxy_add_x_forwarded_for;
+				proxy_set_header X-Forwarded-Proto $scheme;
+	        }
+	    }
+	}
+	
 	`
 
 ## Network and Proxy Configuration
