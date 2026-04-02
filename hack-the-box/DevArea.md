@@ -53,5 +53,17 @@
 	Located and extracted `syswatch-v1.zip` in the home directory, containing the source code for administrative tools.
 ## Sudo Analytics
 	Identified `sudo -l` permissions for `/opt/syswatch/syswatch.sh` with specific restrictions on `web-stop` and `web-restart` commands.
-
-**Current Status**: _Exploitation in progress – identifying path to horizontal/vertical escalation via syswatch._
+	Privilege Escalation: Weak Binary Permissions Hijacking
+	Insecure Permissions Identification: 
+	Discovered that `/usr/bin/bash` had world-writable permissions (`777`), allowing direct modification of the system shell.
+	Bash Hijacking via Sudo Trigger:
+	Created a malicious payload in `/tmp/file` designed to append a passwordless sudo entry for `dev_ryan` to `/etc/sudoers`.
+	Execution and Bypass:
+	Executed `exec /usr/bin/dash` to free the `/usr/bin/bash` binary from the current process lock.
+	Backed up the original shell with `cp /usr/bin/bash /tmp/bash_backup` and successfully overwrote the binary after privilege escalation.
+## Privilege Trigger:
+	Ran `sudo /opt/syswatch/syswatch.sh help`. Since the script uses `#!/bin/bash`, it triggered the malicious payload with root privileges.
+	Vertical Escalation:
+	Verified root access with `sudo -l`, confirming the addition of `(ALL : ALL) NOPASSWD: ALL`.
+	System Restoration:
+	Restored the original bash binary using `cat /tmp/bash_backup > /usr/bin/bash` to stabilize the environment and gained a persistent root shell via `sudo su -`.
