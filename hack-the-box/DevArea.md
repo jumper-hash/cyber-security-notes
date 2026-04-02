@@ -54,4 +54,4 @@
 ## Sudo Analytics
 	Identified `sudo -l` permissions for `/opt/syswatch/syswatch.sh` with specific restrictions on `web-stop` and `web-restart` commands.
 
-rest in progress..
+**Current Status**: _Exploitation in progress – identifying path to horizontal/vertical escalation via syswatch._
