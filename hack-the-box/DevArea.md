@@ -6,8 +6,7 @@
 ## Data Exfiltration and Service Identification
 	Downloaded `employee-service.jar` from the FTP server for static analysis.
 	Identification of Apache CXF framework and discovery of a SOAP endpoint.
-## Exploitation and Data Exfiltration
-	CVE-2019-17638
+## Exploitation and Data Exfiltration CVE-2019-17638
 	LFI via XOP/MTOM: Exploited Local File Inclusion vulnerability in the SOAP service using a custom Bash script.
 	`
 		#!/bin/bash
