@@ -53,3 +53,5 @@
 	Located and extracted `syswatch-v1.zip` in the home directory, containing the source code for administrative tools.
 ## Sudo Analytics
 	Identified `sudo -l` permissions for `/opt/syswatch/syswatch.sh` with specific restrictions on `web-stop` and `web-restart` commands.
+
+rest in progress..
