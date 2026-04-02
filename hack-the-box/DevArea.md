@@ -61,7 +61,7 @@
 	Execution and Bypass:
 	Executed `exec /usr/bin/dash` to free the `/usr/bin/bash` binary from the current process lock.
 	Backed up the original shell with `cp /usr/bin/bash /tmp/bash_backup` and successfully overwrote the binary after privilege escalation.
-## Privilege Trigger:
+## Privilege Escalation:
 	Ran `sudo /opt/syswatch/syswatch.sh help`. Since the script uses `#!/bin/bash`, it triggered the malicious payload with root privileges.
 	Vertical Escalation:
 	Verified root access with `sudo -l`, confirming the addition of `(ALL : ALL) NOPASSWD: ALL`.
