@@ -1,9 +1,7 @@
 #!/usr/bin/env python3
-
 import argparse
 import sys
 import ipaddress
-
 
 path='/etc/hosts'
 separator="#====="
@@ -15,9 +13,7 @@ def main():
     decision.add_argument('-n', '--new', action='store_true', help='adds new entry (default)')
     parser.add_argument('-i','--ip', help='IP address')
     parser.add_argument('-d', '--domain',help='Domain name')
-
     args = parser.parse_args()
-
     try:
         with open(path, "r") as file:
             lines = file.readlines()
@@ -30,6 +26,7 @@ def main():
         if args.ip and args.domain:
             edit(args.ip, args.domain, parser, editline, lines)
         else:
+            parser.print_help()
             print(f"Missing required arguments: --ip and --domain")
             sys.exit(1)
     else:
@@ -39,18 +36,20 @@ def main():
             new(args.ip, args.domain, parser, editline, lines)
         else:
             print(f"Invalid data: --ip and --dns cannot be empty")
+            parser.print_help()
             sys.exit(1)
 
-def check_ip(ip):
+def check_ip(ip,parser):
     try:
         if len(ip.split(".")) == 2:
             ip = f"10.129.{ip}"
         ipaddress.ip_address(ip)
         return ip
     except ValueError:
+        parser.print_help()
         sys.exit("Invalid IP address.")
 
-def check_domain(dns):
+def check_domain(dns,parser):
     return dns if '.' in dns else f"{dns}.htb"
 
 def get_last_index(lines):
@@ -70,8 +69,8 @@ def get_last_index(lines):
     return last_valid    
 
 def new(ip, dns, parser, editline, lines):
-    ip = check_ip(ip)
-    dns = check_domain(dns)
+    ip = check_ip(ip,parser)
+    dns = check_domain(dns,parser)
     new_line = f"{ip}\t{dns}\n"
     
     if lines:
@@ -88,8 +87,8 @@ def edit(ip, dns, parser, editline, lines):
         sys.exit(1)
 
     if (ip and ip in lines[editline]) or (dns and dns in lines[editline]):
-        ip = check_ip(ip)
-        dns = check_domain(dns)
+        ip = check_ip(ip,parser)
+        dns = check_domain(dns,parser)
         
         parts = lines[editline].lstrip('#').split()
         get_old_ip = parts[0]
