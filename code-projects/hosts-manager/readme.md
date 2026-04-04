@@ -1,8 +1,8 @@
 # hosts-manager
 
-	hosts-manager is a Python utility script designed to maintain the /etc/hosts file, specifically tailored for penetration testing environments like Hack The Box (HTB).
-	
-	It automates the process of adding new target entries and editing existing ones, ensuring that the local DNS resolution is always up to date with the latest target IP and domain.
+hosts-manager is a Python utility script designed to maintain the /etc/hosts file, specifically tailored for penetration testing environments like Hack The Box (HTB).
+
+It automates the process of adding new target entries and editing existing ones, ensuring that the local DNS resolution is always up to date with the latest target IP and domain.
 
 ## Features
 
