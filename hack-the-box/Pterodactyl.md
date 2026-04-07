@@ -24,3 +24,4 @@
     Root Acquisition (udiskd Exploit)
     Exploit Implementation: Leveraging a PoC script for CVE-2025-6019 targeting the flaw in libblockdev
     Privilege Elevation: Triggering the library flaw to execute code with root permissions
+*privilege escalation in progress*
