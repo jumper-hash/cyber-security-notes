@@ -6,6 +6,8 @@
     Data Discovery: Identified `printerDetect.bat` within a web-shared directory with read permissions, indicating its use in automated system processes or logon scripts.
     
 ## Active Directory Enumeration
+    `bloodyAD get writable` revealed write permissions to; Liz Wilson, Liz Wilson ADM, krbtg_8245, S-1-5-1
+
     User Enumeration (RPC): Utilized `rpcclient` to map domain users, identifying two high-value targets: `l.wilson` (Standard User) and `l.wilson_adm` (Administrative Account).
     `
     rpcclient -U 'j.arbuckle%Th1sD4mnC4t!@1978' 10.129.26.230
