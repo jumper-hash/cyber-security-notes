@@ -22,6 +22,6 @@
    
 - [x] Scripting
    - [x] Bash scripting
-   - [ ] Shell scriptng
+   - [X] Shell scriptng
    
 - [ ] Centralized Logging and SIEM Integration
