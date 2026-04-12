@@ -14,14 +14,14 @@
 
 # Current Focus
 
-   [x] Windows Server and AD Hardening
+- [x] Windows Server and AD Hardening
    
-   [x] Linux Services and Routing Analysis
+- [x] Linux Services and Routing Analysis
    
-   [x] Cisco Networking (OSPF, ACL, VLAN)
+- [x] Cisco Networking (OSPF, ACL, VLAN)
    
-   [x] Scripting
-         [x] Bash scripting
-         [ ] Shell scriptng
+- [x] Scripting
+   - [x] Bash scripting
+   - [ ] Shell scriptng
    
-   [ ] Centralized Logging and SIEM Integration
+- [ ] Centralized Logging and SIEM Integration
