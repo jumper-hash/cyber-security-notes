@@ -22,6 +22,7 @@
    
 - [x] Scripting
    - [x] Bash scripting
-   - [X] Shell scriptng
+   - [-] Shell scriptng
+   - [X] Python scripting
    
 - [ ] Centralized Logging and SIEM Integration
