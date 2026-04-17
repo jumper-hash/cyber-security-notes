@@ -1,6 +1,6 @@
 # HackTheBox WingData Full Chain Penetration Testing
 ## Exploitation and Shell Stabilizing
-	RCE Execution: Launching `cve.py` with a Netcat reverse shell payload directed to port 443.
+	RCE Execution: Launching payload with a Netcat reverse shell payload directed to port 443.
 	Interactive Shell: Upgrading the terminal using Python's pty module:
 	`python3 -c 'import pty; pty.spawn("/bin/bash")'`
 	Environment Setup: Configuring export TERM=xterm to enable full terminal interactivity and clear screen commands.
