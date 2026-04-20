@@ -11,7 +11,7 @@ path=$starting_directory;
 fi
 
 cd "$path"
-find . -type f -exec ls -la {} + | grep -v "^total" | while read -r privileges links owner_file group_file size month day time rest ; do
+find . -type f 2>/dev/null -exec ls -la {} + | grep -v "^total" | while read -r privileges links owner_file group_file size month day time rest ; do
     match_owner=false
     match_group=false
 
