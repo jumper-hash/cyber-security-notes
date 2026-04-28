@@ -1,3 +1,4 @@
+# * Project temporarily suspended for the exam period. Scheduled to continue after May 15th. *
 # Cyber Security and Systems Administration Lab
    Personal knowledge base and documentation of my hands on experience in IT: 
    - security
