@@ -18,7 +18,7 @@
    - **Linux Security**: Hardening services, SSH simulation, NAT/routing, and user management.
    - **System Hardening**: Writeups with changes made into various services in different systems.
    - **Networking**: Cisco Packet Tracer projects including OSPF, Router on a Stick, and ACLs.
-   - **Code Projects**: Simple tools written in different languages, like file scanner for automated system checks.
+   - **Scripts**: Simple tools written in different languages: Python, Bash, Powershell.
    - **Hack The Box labs**: Labs walkthrough
 
 # Current Focus
