@@ -14,7 +14,7 @@
         "tempToken": "[TOKEN]",
         "password": "Qwerty12345."
       }
-    }
+    }'
 ## (RCE) CVE-2025-59528 executed as intended.
 - Previously prepared Sleep Test injection resulted in delayed server response, proving it as vulnerable, which allowed for further exploitation.
 
