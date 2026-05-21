@@ -10,38 +10,38 @@
 - ACL Implementation: intern granted read only access via `getfacl`
 
 ## Verification Methods
-Identity check  > `/etc/passwd` and `/etc/group`
-Credential check  > `/etc/shadow`
-Access Control List check  > `getfacl /var/soc`
+- Identity check  > `/etc/passwd` and `/etc/group`
+- Credential check  > `/etc/shadow`
+- Access Control List check  > `getfacl /var/soc`
 
 # Sudo Configuration and Privilege Escalation Control
 
 ## Operational Constraints (analyst1)
-Restricted to specific service management
-Command allowed: `/bin/systemctl` restart sshd
-Explicitly denied: `su access, shell access, ALL=(ALL) ALL privileges`
+- Restricted to specific service management
+- Command allowed: `/bin/systemctl` restart sshd
+- Explicitly denied: `su access, shell access, ALL=(ALL) ALL privileges`
 
 ## Sudoers Security
-Configuration managed via `visudo`
-File permissions set to `-r--r----- (root:root)`
-Prohibited unauthorized modification of `/etc/sudoers`
+- Configuration managed via `visudo`
+- File permissions set to `-r--r----- (root:root)`
+- Prohibited unauthorized modification of `/etc/sudoers`
 
 ## AuditandMonitoring
-Event tracking via `/var/log/secure`
-Detailed logs checked through `journalctl`
+- Event tracking via `/var/log/secure`
+- Detailed logs checked through `journalctl`
 
 ## Outcome
-Strict implementation of Least Privilege Principle
-Users limited to operational access for a single service
+- Strict implementation of Least Privilege Principle
+- Users limited to operational access for a single service
 
 # Defensive Strategy and System Security
 
 ## Security Fundamentals Implemented
-Access Control -> granular management of user rights
-Role Separation -> distinct permissions for analysts vs interns
-Privilege Limitation -> minimized potential for elevation
-Attack Surface Reduction -> blocking shell access and broad `sudo` rights
-Event Analysis -> constant monitoring of administrative actions
+- Access Control -> granular management of user rights
+- Role Separation -> distinct permissions for analysts vs interns
+- Privilege Limitation -> minimized potential for elevation
+- Attack Surface Reduction -> blocking shell access and broad `sudo` rights
+- Event Analysis -> constant monitoring of administrative actions
 
 ## Final Conclusion
 Transition from basic Linux installation to Security Management
