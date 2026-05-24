@@ -1,2 +1,1 @@
-# Wazuh deployment
-  
+# Docker Infrastructure and Wazuh Implementation
