@@ -5,8 +5,8 @@
 - Storage: Bind mount volume from `/docker/website` to `/usr/share/nginx/html`
 - Image: Official nginx:latest managed via Docker Compose
 - Verification: 
-	- Confirmed HTTP via curl `http://localhost:3000`
-	- Confirmed HTTP from remote host via curl `http://192.168.10.1:80`
+	- Confirmed HTTP via curl `http://localhost:80`
+	- Confirmed HTTP from remote host via curl `http://192.168.10.1:3000`
 
 ## Operational Diagnostics and Traffic Analysis
 - Socket Monitoring (`ss -tulnp`)
