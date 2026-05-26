@@ -1,7 +1,7 @@
 # Docker Infrastructure and Wazuh, Nginx, Apache2 Implementation
 
 ## Environment
-- OS `Ubutnu 24.04 LTS`
+- OS `Ubutnu server 24.04 LTS`
 - Containers:
   - Wazuh v4.14.5 
   - Apache2 v2.4 //latest
