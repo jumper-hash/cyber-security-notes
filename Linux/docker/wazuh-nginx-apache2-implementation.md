@@ -46,7 +46,7 @@
           wazuh-network:
             external: true
             name: single-node_default
-`wazuh-network` selected as network used for communication
+- `wazuh-network` selected as network used for communication
 
 - `docker compose up -d && docker ps -a` started and confirmed apache2 service working properly
   
