@@ -61,7 +61,7 @@ Starting the Wazuh container caused the host machine to run out of disk space, w
 - Added new disk intended for Docker storage
 - Mounting disk `sudo mount /dev/sdb /mnt/data`
 
-## Creating Docker config file `/etc/docker/daemon.json`, resulted in limiting used space and changing pyhsical destination
+## Creating Docker config file `/etc/docker/daemon.json`, resulted in limiting used space and changed pyhsical destination
 
       {
       "data-root": "/mnt/data/docker",
