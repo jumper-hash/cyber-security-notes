@@ -24,7 +24,6 @@
 
 ## Generating certificates for wazuh
 `docker compose -f generate-indexer-certs.yml run --rm generator`
-
 ## Starting Wazuh container
 - `docker compose up -d`: current configuraion resulted in creation of Docker internal network `wazuh-network`, which will be later used between other services to communicate with Nginx
 - `docker ps -a`: confirmed Wazuh container working properly
@@ -70,3 +69,8 @@ Starting the Wazuh container caused the host machine to run out of disk space, w
         "max-size": "80m",
         "max-file": "4"
       }
+## Modifying /mnt/data/wazuh-docker/single-node/docker-compose.yaml
+- Replacing path for Wazuh filesystem: `sed -i 's|\./config|/mnt/data/wazuh/config|g' docker-compose.yml`
+- Starting Wazuh again: `docker compose up -d`  
+
+  
