@@ -7,8 +7,9 @@ After installation endpoint was not visible in the panel
 ## Troubleshooting
 - `systemctl status wazuh-agent.service` revealed that service is running
 - configuration file inspection
-  - `/var/ossec/etc/ossec.conf` had improper server ip address `10.10.15.1`, changing it to `192.168.10.1` fixed problem
-- `systemctl restart wazuh-agent.service` restarted service, which led to estabilishing connection with Wazuh server
+  - Discovered that the `WAZUH_MANAGER` environment variable from the deployment command did not propagate correctly. The configuration file contained an incorrect placeholder ip: `10.10.15.1`. It was due to the older and outdated system configuration
+  - Manually updated the `<server><address>` tag in /var/ossec/etc/ossec.conf to the correct manager address: `192.168.10.1`
+- `systemctl restart wazuh-agent.service` restarted service, which eventually led to estabilishing connection with the Wazuh server
 
 # Dashboard overview
 ## Wazuh reconnaissance
