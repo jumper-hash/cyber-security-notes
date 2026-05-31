@@ -19,5 +19,5 @@ After installation endpoint was not visible in the panel
   - Medium: 1563
   - Low: 65
 - CVE level elevation:
-  - 117 Flaws found with CVE score 9.8, being extremely impactful to the system
+  - 117 Flaws found with CVE base score 9.8, being extremely impactful to the system
   
