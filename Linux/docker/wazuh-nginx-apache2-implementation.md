@@ -71,6 +71,28 @@ Starting the Wazuh container caused the host machine to run out of disk space, w
       }
 ## Modifying /mnt/data/wazuh-docker/single-node/docker-compose.yaml
 - Replacing path for Wazuh filesystem: `sed -i 's|\./config|/mnt/data/wazuh/config|g' docker-compose.yml`
-- Starting Wazuh again: `docker compose up -d`  
+- Starting Wazuh again: `docker compose up -d`
+
+# Nginx reverse proxy setup
+`docker-compose.yml` configuration:
+
+    services:
+      nginx:
+        image: nginx:alpine
+        container_name: nginx-proxy
+        restart: always
+        ports:
+          - "80:80"
+          - "443:443"
+        volumes:
+          - /mnt/data/nginx/conf.d:/etc/nginx/conf.d:ro
+        networks:
+          - wazuh-network
+    
+    networks:
+      wazuh-network:
+        external: true
+        name: single-node_default
+
 
   
