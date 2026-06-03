@@ -1,4 +1,5 @@
 import time
+import os
 import sys
 import ipaddress
 import subprocess
@@ -6,20 +7,25 @@ import argparse
 
 sd="sudo -l" #if not possible, pass
 paswd="cat /etc/passwd"
-separator="\n ===================================================\n"
-
+separator=" ========================================================================\n"
+mid="|------------------------------------------------------------------------|\n"
+underscore='_______________________________________________________________________'
 def main():
+    result=[]
     target="./dump"
 
     commands=[
         'ps -aux',
-        'ss -tulpn',
-        'cat /etc/passwd',
-        'ls /etc',
-        'sudo -l',
-        'uname -a',
         'env',
-        'find / -perm -4000 2>/dev/null'
+        'uname -a',
+        'cat /etc/passwd',
+    ]
+    finds=[
+        'find / -perm -4000 2>/dev/null',
+    ]
+    sudos=[
+        'ss -tulpn',
+        'sudo -l',
     ]
 
 
@@ -33,42 +39,52 @@ def main():
     parser.add_argument("-a","--additional",help="additional commands") 
     args = parser.parse_args()
 
-    if args.password is not None: s = f"sudo -S "
-                                        # f"sudo -S {parser.password} "
-    if args.ip is not None:
-        try:
-            ipaddress.ip_address(args.ip)
-            default(s, commands, args.password, target)
-        except ValueError:
-            print("Ip error")
-            return
-    else:
-        default(s, commands, args.password, target)
-
-def default(sudo, tab, pwd, target):
     with open(target,"w") as tmp:
-        tmp.write('Jumper dumping script')
-    for el in tab:
-        new=sudo.split()
-        for i in el.split():
-            new.append(i)
+        tmp.write("\n\t\t###---Jumper dumper---###")
+        print("\n\t\t###---Jumper dumper---###")
+
+    if args.password is not None: s = f"sudo -S "
+    if args.ip is not None:#ip check
         try:
-            effect = [new, subprocess.check_output(new, input=pwd, text=True, shell=True).strip()]
-        except:
-            effect = [new, "Incorrect password for sudo"]
+            ipaddress.ip_address(args.ip) 
+        except ValueError:
+            print("incorrect ip")
+            sys.exit(1)
+
+    finish1=str(default(commands,separator,mid,result))+'\n' #[commands] operation
+    finish2=str(looper(finds,separator,mid))+'\n'                          #[finds] operation
+    final=finish1+finish2                                    #fetch
+    # print(final)
+
+
+
+
+
+def default(tab,s,m,result):
+    for command in tab:
+        try:    #executing commands one by one
+            effect = [command, subprocess.check_output(command, text=True, shell=True).strip()]
+        except subprocess.CalledProcessError as e:
+            effect = [command, e.output.strip()]
             pass
-        command=''
-        for s in effect[0]:
-            command=command+s+" "
 
-        #can replace {el} with {command}, similar output
+        #joining results into one, then return
+        result.append(f"{s}{2*m}{s}\n\nScript:{subprocess.check_output("pwd", text=True ).strip()}# {command}\n\n")
+        result.append(str(effect[1])+f"\n\n")
+    return (''.join(result))
 
-        peroid=[f"Script:{subprocess.check_output("pwd", text=True ).strip()}# {el}\n",str(effect[1])+"\n\n\n"]
-     
-        with open(target,"a") as f:
-            for a in peroid:
-                print(a)
-                f.write(a)
+def looper(find,s,m):
+    result=[]
+    effect='' #loop for another set of commands based on $find
+    for command in find:
+        pass #work in progress
+    result.append(f"{s}{2*m}{s}\n\nScript:{subprocess.check_output("pwd", text=True ).strip()}# {command}\n\n")
+    result.append(str(effect)+f"\n\n")
+
+    print(*result)
+
+
+
 
 
 if __name__ == "__main__":
