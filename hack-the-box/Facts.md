@@ -5,7 +5,7 @@
 - Endpoint Discovery: Manual and automated fuzzing revealing `/admin/login`
 - Platform Analysis: Identification of Camaleon CMS 2.9.0 as the core engine
 
-## ExploitationandDataExfiltration
+## Exploitation and Data Exfiltration
 - CVE-2025–2304: Exploiting Privilege Escalation within CMS to gain administrative access
 - Cloud Leakage: Identification and extraction of AWS S3 Access Keys and Bucket names
 - CVE-2024-46987: Leveraging Path Traversal to read `/etc/passwd` and sensitive system files
