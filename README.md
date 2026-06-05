@@ -34,3 +34,6 @@
 
 ----
 ***Build, break, repeat***
+
+## Ethical Use Disclaimer
+Note: This repo is intended for educational purposes and authorized security auditing (e.g., CTF competitions, penetration testing engagements) and it serves as my portfolio. I assume no liability for any misuse of this software. Always ensure you have explicit permission to run scripts on the target system.
