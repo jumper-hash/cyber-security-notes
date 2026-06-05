@@ -1,14 +1,15 @@
 # dumper
-dumper is a python script, designed to perform quick linux-based system dump, with file output with posibility to send out data 
+dumper is a lightweight Python automation script designed for rapid Linux system enumeration. It executes a series of diagnostic commands, gathers system information, and provides options to either save the output locally or exfiltrate it to a remote listener.
 ## Features
-- `-p` option allows to use sudo commands, wrong password validation may exit the script
-- most common attack vectors scan
-- option to add own unix commands into 3 categories by modifying lists inside script:
-    - commands based on every command except `find`
-    - commands based on `find` command especially
-    - commands executed with sudo priviledges, eg. `sudo -l`
-- commands based on find output `ls -l` version of every found file
-- possibility to send output to previously opened port, eg. `nc -lvnp 7777` on attacking machine, with script usage with `-d ` parameter
-
+- Customizable Command Sets: Easily categorize and modify commands directly within the script:
+    - commands: Standard system information gathering.
+    - finds: Focused reconnaissance using the find utility.
+    - sudos: Privileged command execution.
+    - Intelligent Reporting: Automatically performs `ls -l` on files discovered during search operations for immediate permission analysis.
+- Flexible Output:
+    - Local: Save results directly to a file using the `-d` flag.
+    - Remote: Stream output to a remote listener (e.g., `nc`) using the `-i` (IP) and `-l` (port) flags.
+- Sudo Support: Secure handling of sudo privileges with password input functionality.
+  
 ## How It Works
-`python ./dumper.py -d 
+`python3 dumper.py [-h] [-i IP] [-p PASSWORD] [-d DESTINATION] [-l PORT]`
