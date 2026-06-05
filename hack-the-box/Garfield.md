@@ -44,3 +44,5 @@
 
 ## Domain Analysis and Data Exfiltration
 - User Flag Recovery: Accessed the WinRm and retrieved the contents of `user.txt`.
+
+*rest of the exploitation in progress*
