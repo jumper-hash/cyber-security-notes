@@ -1,7 +1,7 @@
 # HackTheBox DevArea Full Chain Penetration Testing
 
 ## External Reconnaissance and Web Entry
-- Network Mapping: Nmap scan of `10.129.18.149` leading to `devarea.htb` identification
+- Network Mapping: `nmap` scan of `10.129.18.149` leading to `devarea.htb` identification
 - Nmap scan identifying Jetty 9.4.27 (port 8080) and an FTP server with anonymous access.
 ## Data Exfiltration and Service Identification
 - Downloaded `employee-service.jar` from the FTP server for static analysis.
