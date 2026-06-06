@@ -5,7 +5,7 @@
 - Vhost Enumeration: Executing `gobuster vhost --append-domain` to discover subdomains.
 - Endpoint Discovery: Successful identification of `bin.kobold.htb` and `mcp.kobold.htb`.
 ## Exploitation and Initial Access
-- Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector on `mcp.kobold.htb`.
+- Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector v1.4.2 on `mcp.kobold.htb`.
 - CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
 - Payload Delivery: Utilizing `curl` to inject a malicious JSON configuration into the `/api/mcp/connect` endpoint.
 ## Reverse shell
