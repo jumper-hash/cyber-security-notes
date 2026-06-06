@@ -33,13 +33,12 @@
 ## Lateral movement and system enumeration
 - File enumeration: `cat /etc/passwd` revealed other user: `analyst` with `uid:1002`
 - Socket scan: `ss -tulpn` revealed open port `8888` on `127.0.0.1`, the exact same port was shown on `http://devhub.htb`
-- SSH forwarding: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` creating port forwarding to access hidden panel on `127.0.0.1:8888` 
-- Local panel enumeration: `localhost:8888` led to jupyter panel, which became next attack vector
+- SSH forwarding: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` creating port forwarding to access hidden jupyter panel on `127.0.0.1:8888` 
 - Process scan: `ps aux | grep jupyter` shown process with hardcoded `--ServerApp.token`, leading to token compromise
 
 ## Privilege escalation
 - Token usage: Extracted token was used to gain controll over jupyter panel, leading to `analyst` compromise
-- Credential Placement: Deploying the public key into the target user’s `.ssh/authorized_keys` directory via `wget` and previously prepared `http` server.
+- Credential Placement: Deploying the public key into the `analyst/.ssh/authorized_keys` directory via `wget` and previously prepared `http` server.
 - Stable Connection: Establishing a persistent key-based SSH connection
 - `/home/analyst/user.txt` extraction
 
