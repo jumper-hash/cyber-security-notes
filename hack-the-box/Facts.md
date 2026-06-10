@@ -12,7 +12,7 @@
 
 ## Credential Cracking and SSH Access
 - SSH Key Recovery: Extraction of an encrypted private key for user `trivia`
-- John The Ripper: Brute-force attack on SSH passphrase (Cracked: dragonballz)
+- John The Ripper: Brute-force attack on SSH passphrase (Cracked: dragXXXXXXXX)
 - Lateral Movement: Interactive SSH session and retrieval of `user.txt`
 
 # Privilege Escalation and Root Access
