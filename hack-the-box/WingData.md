@@ -18,7 +18,7 @@
 - Platform Analysis: Identifying vulnerability to `CVE-2025-4517` within the Python tarfile module.
 - Technical Troubleshooting: Analyzing the filter="data" parameter which successfully blocked standard path traversal attempts (`../../` ....).
 	
-## Root Acquisition (CVE-2025-4517)
+## Root Acquisition (`CVE-2025-4517`)
 - Symlink and Hardlink Bypass: Crafting a malicious .tar archive using a deep directory structure and hardlinks to bypass extraction filters.
 - Command Execution: Triggering the backup restoration script to overwrite `/etc/sudoers` via the symlink "portal".
 - Validation: Confirming privilege elevation via` sudo -l` showing `NOPASSWD: ALL`.
