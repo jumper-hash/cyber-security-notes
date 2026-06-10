@@ -4,7 +4,7 @@
 - Platform Analysis: Identification of ZoneMinder v1.37.63 via default administrative credentials (`admin/admin`)
 
 ## Exploitation and Data Exfiltration
-- CVE-2024–51482: Exploiting a Multi-Stage Vulnerability within ZoneMinder for initial system interaction
+- `CVE-2024–51482`: Exploiting a Multi-Stage Vulnerability within ZoneMinder for initial system interaction
 - SQL Injection: Utilizing SQLmap for automated database exploitation and user/password hash extraction
 
 ## Credential Cracking and SSH Access
@@ -17,7 +17,7 @@
 - Credential Recovery: Manual extraction of administrative hash from `/etc/motioneye/motion.conf`
 
 # Privilege Escalation and Root Access
-## Privilege Escalation CVE 2025-60787 (motionEye)
+## Privilege Escalation `CVE 2025-60787` (motionEye)
 - Command Injection: Exploiting the `Image File Name` parameter within the motionEye dashboard
 - Sudoers Manipulation: Injecting a malicious payload to modify system permissions
 - Command: `$(echo "mark ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers).%Y-%m-%d`
