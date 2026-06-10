@@ -36,10 +36,20 @@
 - SSH forwarding: `ssh -i mcp-dev@devhub.htb -L 4444:127.0.0.1:8888` creating port forwarding to access hidden jupyter panel on `127.0.0.1:8888` 
 - Process scan: `ps aux | grep jupyter` shown process with hardcoded `--ServerApp.token`, leading to token compromise
 
-## Privilege escalation
+## Privilege escalation (`mcp-dev` -> `analyst`)
 - Token usage: Extracted token was used to gain controll over jupyter panel, leading to `analyst` compromise
 - Credential Placement: Deploying the public key into the `analyst/.ssh/authorized_keys` directory via `wget` and previously prepared `http` server.
 - Stable Connection: Establishing a persistent key-based SSH connection
 - `/home/analyst/user.txt` extraction
 
-  *work in progress*
+## Priviledge escalation (`analyst` -> `root`)
+- process and files examination:
+    - `ps aux |grep /opt` revealed process owned by `root`
+      
+ 	 	`root        1056  0.0  0.7 111108 28880 ?        Ss   18:29   0:00 /home/analyst/jupyter-env/bin/python3 /opt/opsmcp/server.py`
+
+    - `ls -l /opt/opsmcp/server.py `
+      
+     	 `-rw-r----- 1 analyst analyst 6021 Mar 16 21:49 /opt/opsmcp/server.py`
+
+- token extraction: `server.py` contained VALID_API_KEY = "opsmcp_secret_key_4fXXXXXXXXXXXXXX"
