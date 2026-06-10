@@ -6,7 +6,7 @@
 ## Data Exfiltration and Service Identification
 - Downloaded `employee-service.jar` from the FTP server for static analysis.
 - Identification of Apache CXF framework and discovery of a SOAP endpoint.
-## Exploitation and Data Exfiltration CVE-2019-17638
+## Exploitation and Data Exfiltration `CVE-2019-17638`
 LFI via XOP/MTOM: Exploited Local File Inclusion vulnerability in the SOAP service using a custom Bash script.
 
 		#!/bin/bash
@@ -41,7 +41,7 @@ LFI via XOP/MTOM: Exploited Local File Inclusion vulnerability in the SOAP servi
 		
 Credential Leakage: Read `/etc/systemd/system/hoverfly.service` which revealed cleartext credentials for the HoverFly admin panel.
 
-## CVE-2025-54123
+## `CVE-2025-54123`
 Leveraged a Command Injection vulnerability in HoverFly, which allows using a public GitHub exploit to generate a reverse shell.
 
 ## Lateral Movement
