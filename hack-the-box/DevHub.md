@@ -7,7 +7,7 @@
   
 # Web reconnaissance
 - Vulnerability Analysis: Identifying an outdated version of MCPJam Inspector v1.4.2 on `http://devhub.htb:6274`
-- CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
+- `CVE-2026-23744`: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
 - Payload Delivery: Utilizing curl to inject a malicious JSON configuration into the /api/mcp/connect endpoint.
 
 ## Reverse shell
