@@ -6,9 +6,9 @@
 - Platform Analysis: Identification of Camaleon CMS 2.9.0 as the core engine
 
 ## Exploitation and Data Exfiltration
-- CVE-2025–2304: Exploiting Privilege Escalation within CMS to gain administrative access
+- `CVE-2025–2304`: Exploiting Privilege Escalation within CMS to gain administrative access
 - Cloud Leakage: Identification and extraction of AWS S3 Access Keys and Bucket names
-- CVE-2024-46987: Leveraging Path Traversal to read `/etc/passwd` and sensitive system files
+- `CVE-2024-46987`: Leveraging Path Traversal to read `/etc/passwd` and sensitive system files
 
 ## Credential Cracking and SSH Access
 - SSH Key Recovery: Extraction of an encrypted private key for user `trivia`
