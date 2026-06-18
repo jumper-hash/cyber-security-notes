@@ -3,8 +3,8 @@
 ## Environment
 - OS `Ubutnu server 24.04 LTS`
 - Containers:
-  - Wazuh v4.14.5 
-  - Apache2 v2.4 //latest
+  - `Wazuh v4.14.5` 
+  - `Apache2 v2.4` //latest
  
 # Wazuh setup
 - Official github repository pull: `git clone https://github.com/wazuh/wazuh-docker.git -b v4.14.5`
