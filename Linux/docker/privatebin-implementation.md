@@ -3,11 +3,11 @@
 ## Secure Nginx Reverse Proxy and PrivateBin Service
 
 - Service Architecture: PrivateBin (PHP-FPM) behind an Nginx SSL Termination Proxy
-- External Access: Host Port 8443 mapped to Container Port 443 (HTTPS)
+- External Access: Host Port 443 mapped to Container Port 8080 (HTTPS)
 - Security: 
 	- SSL encryption enabled via self-signed certificates
 	- PrivateBin container running in `read_only` mode with UID 1000
-	- TLS protocols restricted to v1.2 and v1.3
+	- TLS protocols restricted to v1.3
 - Storage: Bind mount volume from `./data` to `/srv/data` for persistent pastes
 - Images: `privatebin/nginx-fpm-alpine` and `nginx:alpine` managed via Docker Compose
 
@@ -56,7 +56,7 @@
 			ssl_certificate /etc/nginx/certs/selfsigned.crt;
 			ssl_certificate_key /etc/nginx/certs/selfsigned.key;
 	
-			ssl_protocols TLSv1.2 TLSv1.3;
+			ssl_protocols TLSv1.3;
 			ssl_ciphers HIGH:!aNULL:!MD5;
 
 			location / {
