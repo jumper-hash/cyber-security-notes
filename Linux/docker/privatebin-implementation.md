@@ -20,7 +20,6 @@
 - Certificate Path: Verified mount points for `/etc/nginx/certs` within the proxy container
 
 ## docker-compose.yaml File
-	version: '3'
 	services:
 	  privatebin:
 	    image: privatebin/nginx-fpm-alpine
@@ -28,6 +27,7 @@
 	    restart: always
 	    read_only: true
 	    user: '1000:1000'
+		expose: "8080"
 	    volumes:
 	      - ./data:/srv/data
 	
@@ -36,7 +36,7 @@
 	    container_name: nginx-proxy
 	    restart: always
 	    ports:
-	      - "8443:443"
+	      - "443:8080"
 	    volumes:
 	      - ./nginx.conf:/etc/nginx/nginx.conf:ro
 	      - ./https_keys:/etc/nginx/certs:ro
