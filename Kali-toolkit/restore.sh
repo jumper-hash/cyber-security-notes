@@ -1,6 +1,6 @@
 #!/usr/bin/env bash
 # ============================================================
-# Kali Restore — final fixed version
+# Kali Restore v 2.2
 # Author jumper-hash
 # Run: chmod +x kali-restore.sh && sudo ./kali-restore.sh
 # ============================================================
