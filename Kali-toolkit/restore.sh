@@ -14,6 +14,9 @@ STAGE_DIR="${TOOLS_DIR}/staging"
 DATE_TAG="$(date +%Y%m%d)"
 LOGFILE="${TOOLS_DIR}/kali-restore-${DATE_TAG}.log"
 
+# Make sure the tools directory exists before logging starts
+mkdir -p "$TOOLS_DIR" "$STAGE_DIR"
+
 # Colors
 RED='\033[0;31m'
 GREEN='\033[0;32m'
@@ -82,7 +85,10 @@ install_apt_pkgs() {
         python3-pip \
         bat \
         fzf \
-        pipx 2>&1 | tee -a "${LOGFILE}"
+        pipx \
+        xfce4-genmon-plugin \
+        power-profiles-daemon \
+        2>&1 | tee -a "${LOGFILE}"
 
     log "Installing tools through pipx..."
     pipx ensurepath
@@ -254,7 +260,11 @@ clone_tools() {
 
 pip_installs() {
     log "Installing Python fuzzing tools..."
-    pip3 install wfuzz arjun 2>&1 | tee -a "${LOGFILE}"
+
+    pip3 install \
+        --break-system-packages \
+        wfuzz arjun \
+        2>&1 | tee -a "${LOGFILE}"
 }
 
 download_static_bins() {
@@ -269,13 +279,15 @@ download_static_bins() {
             wget -q -O "pspy64_${arch}" \
                 "https://github.com/DominicBreuker/pspy/releases/latest/download/pspy64_${arch}" \
                 2>/dev/null || true
+
+            chmod +x "pspy64_${arch}" 2>/dev/null || true
         done
 
         cd "$SCRIPT_DIR"
     fi
 }
 
-# === NEW SECTION: Shell configuration (Zsh) and aliases ===
+# === Shell configuration (Zsh) and aliases ===
 configure_shell() {
     local user_home="/home/kali"
     local shell_rc="${user_home}/.zshrc"
@@ -288,7 +300,7 @@ configure_shell() {
     # Make sure the directory and file exist
     mkdir -p "$shell_d"
 
-    # === NEW SECTION: Aliases ===
+    # === Aliases ===
     cat > "$commands_file" << 'EOF'
 # === Kali Restore — user aliases ===
 
@@ -334,9 +346,12 @@ EOF
     log "Zsh shell configured."
 }
 
-# === NEW SECTION: NOPASSWD for the sudo group ===
+# === NOPASSWD for the sudo group ===
 configure_sudo_nopasswd() {
     log "Configuring NOPASSWD for the sudo group..."
+
+    # Create a backup before modifying sudoers
+    cp -a /etc/sudoers "/etc/sudoers.kali-restore-backup"
 
     # Check whether a NOPASSWD entry for %sudo already exists
     if grep -qP '^%sudo\s+ALL=\(ALL\:ALL\)\s+NOPASSWD:\s*ALL' \
@@ -367,16 +382,600 @@ configure_sudo_nopasswd() {
     if visudo -c -f /etc/sudoers 2>/dev/null; then
         log "NOPASSWD for the sudo group — configured successfully."
     else
-        err "Syntax error in /etc/sudoers! Reverting..."
+        err "Syntax error in /etc/sudoers! Restoring backup..."
 
-        # Revert changes — restore from backup if one exists
-        sed -i '/# added by kali-restore.sh/d' /etc/sudoers
-        sed -i \
-            's/^#\(%sudo\s\+ALL=(ALL\:ALL)\s\+ALL\).*$/\1/' \
+        cp -a \
+            /etc/sudoers.kali-restore-backup \
             /etc/sudoers
 
-        warn "Changes to sudoers have been reverted. Check manually."
+        chmod 440 /etc/sudoers
+
+        warn "Changes to sudoers have been reverted."
     fi
+}
+
+# === NEW SECTION: Remove empty lines from /etc/hosts ===
+clean_hosts_file() {
+    log "Removing empty lines from /etc/hosts..."
+
+    if [[ -f /etc/hosts ]]; then
+        sed -i '/^[[:space:]]*$/d' /etc/hosts
+        log "/etc/hosts cleaned."
+    else
+        warn "/etc/hosts not found."
+    fi
+}
+
+# === NEW SECTION: Power management and screen configuration ===
+configure_power_management() {
+    local user_home="/home/kali"
+    local local_bin="${user_home}/.local/bin"
+    local power_script="${local_bin}/kali-power-settings.sh"
+    local autostart_dir="${user_home}/.config/autostart"
+    local autostart_file="${autostart_dir}/kali-power-settings.desktop"
+
+    log "Configuring power management and screen settings..."
+
+    mkdir -p "$local_bin" "$autostart_dir"
+
+    cat > "$power_script" << 'EOF'
+#!/usr/bin/env bash
+
+# ============================================================
+# Kali Restore — disable screen blanking and power saving
+# ============================================================
+
+# Disable X11 screen saver and DPMS
+if command -v xset >/dev/null 2>&1; then
+    xset s off
+    xset s noblank
+    xset -dpms
+fi
+
+# Configure Xfce Power Manager
+if command -v xfconf-query >/dev/null 2>&1; then
+
+    # Disable display power management
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/dpms-enabled \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+
+    # Disable display blanking
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/blank-on-ac \
+        --create \
+        -t int \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/blank-on-battery \
+        --create \
+        -t int \
+        -s 0 2>/dev/null || true
+
+    # Disable DPMS sleep and display-off timers
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/dpms-on-ac-sleep \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/dpms-on-ac-off \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/dpms-on-battery-sleep \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/dpms-on-battery-off \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    # Disable automatic system sleep on AC and battery
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/inactivity-on-ac \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/inactivity-on-battery \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    # Disable automatic sleep actions
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/inactivity-sleep-mode-on-ac \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/inactivity-sleep-mode-on-battery \
+        --create \
+        -t uint \
+        -s 0 2>/dev/null || true
+
+    # Use the performance power profile when supported
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/profile-on-ac \
+        --create \
+        -t string \
+        -s performance 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-power-manager \
+        -p /xfce4-power-manager/profile-on-battery \
+        --create \
+        -t string \
+        -s performance 2>/dev/null || true
+fi
+
+# Disable Xfce screensaver if installed
+if command -v xfconf-query >/dev/null 2>&1; then
+
+    xfconf-query \
+        -c xfce4-screensaver \
+        -p /saver/enabled \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-screensaver \
+        -p /saver/idle-activation/enabled \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-screensaver \
+        -p /lock/enabled \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-screensaver \
+        -p /lock/saver-activation/enabled \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+
+    xfconf-query \
+        -c xfce4-screensaver \
+        -p /lock/sleep-activation \
+        --create \
+        -t bool \
+        -s false 2>/dev/null || true
+fi
+
+# If power-profiles-daemon is available, force performance mode
+if command -v powerprofilesctl >/dev/null 2>&1; then
+    powerprofilesctl set performance 2>/dev/null || true
+fi
+
+exit 0
+EOF
+
+    chmod +x "$power_script"
+    chown kali:kali "$power_script"
+
+    cat > "$autostart_file" << EOF
+[Desktop Entry]
+Type=Application
+Name=Kali Restore Power Settings
+Comment=Disable screen blanking and power saving
+Exec=${power_script}
+Terminal=false
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+EOF
+
+    chmod 644 "$autostart_file"
+    chown kali:kali "$autostart_file"
+
+    log "Power management configuration created."
+}
+
+# === NEW SECTION: Clean /etc/hosts status for the Xfce panel ===
+configure_hosts_panel() {
+    local user_home="/home/kali"
+    local local_bin="${user_home}/.local/bin"
+    local hosts_script="${local_bin}/hosts-status.sh"
+    local panel_script="${local_bin}/kali-panel-setup.sh"
+    local autostart_dir="${user_home}/.config/autostart"
+    local autostart_file="${autostart_dir}/kali-panel-setup.desktop"
+
+    log "Configuring clean /etc/hosts status for the Xfce panel..."
+
+    mkdir -p "$local_bin" "$autostart_dir"
+
+    # --------------------------------------------------------
+    # Script displayed by Generic Monitor
+    # --------------------------------------------------------
+    cat > "$hosts_script" << 'EOF'
+#!/usr/bin/env bash
+
+# Display the last non-empty line of /etc/hosts.
+# No icons, no labels, no additional output.
+
+awk 'NF { last=$0 } END { if (last != "") print last }' /etc/hosts
+EOF
+
+    chmod +x "$hosts_script"
+    chown kali:kali "$hosts_script"
+
+    # --------------------------------------------------------
+    # Automatic Xfce panel configuration
+    # --------------------------------------------------------
+    cat > "$panel_script" << 'EOF'
+#!/usr/bin/env bash
+
+set -u
+
+HOSTS_SCRIPT="/home/kali/.local/bin/hosts-status.sh"
+
+# ------------------------------------------------------------
+# Helper functions
+# ------------------------------------------------------------
+get_panel_ids() {
+    xfconf-query \
+        -c xfce4-panel \
+        -l 2>/dev/null |
+        awk -F/ '$2 == "panels" && $3 ~ /^panel-[0-9]+$/ { print $3 }' |
+        sort -u
+}
+
+get_plugin_ids() {
+    local panel="$1"
+
+    xfconf-query \
+        -c xfce4-panel \
+        -p "/panels/${panel}/plugin-ids" \
+        2>/dev/null |
+        tail -n +3
+}
+
+get_plugin_type() {
+    local id="$1"
+
+    xfconf-query \
+        -c xfce4-panel \
+        -p "/plugins/plugin-${id}" \
+        2>/dev/null || true
+}
+
+get_plugin_command() {
+    local id="$1"
+
+    xfconf-query \
+        -c xfce4-panel \
+        -p "/plugins/plugin-${id}/command" \
+        2>/dev/null || true
+}
+
+# ------------------------------------------------------------
+# Wait for Xfce panel
+# ------------------------------------------------------------
+for _ in {1..30}; do
+    if pgrep -u kali -x xfce4-panel >/dev/null 2>&1; then
+        break
+    fi
+
+    sleep 1
+done
+
+if ! pgrep -u kali -x xfce4-panel >/dev/null 2>&1; then
+    exit 0
+fi
+
+# ------------------------------------------------------------
+# Find the panel containing the clock
+# ------------------------------------------------------------
+TARGET_PANEL=""
+
+while IFS= read -r panel; do
+    [[ -z "$panel" ]] && continue
+
+    while IFS= read -r id; do
+        [[ -z "$id" ]] && continue
+
+        type="$(get_plugin_type "$id")"
+
+        if [[ "$type" == "clock" ]]; then
+            TARGET_PANEL="$panel"
+            break 2
+        fi
+    done < <(get_plugin_ids "$panel")
+done < <(get_panel_ids)
+
+# Fallback to panel-1 if no clock was found
+if [[ -z "$TARGET_PANEL" ]]; then
+    TARGET_PANEL="panel-1"
+fi
+
+# ------------------------------------------------------------
+# Find an existing GenMon instance for our hosts script
+# ------------------------------------------------------------
+GENMON_ID=""
+
+while IFS= read -r id; do
+    [[ -z "$id" ]] && continue
+
+    type="$(get_plugin_type "$id")"
+
+    if [[ "$type" == "genmon" ]]; then
+        command="$(get_plugin_command "$id")"
+
+        if [[ "$command" == "$HOSTS_SCRIPT" ]]; then
+            GENMON_ID="$id"
+            break
+        fi
+    fi
+done < <(get_plugin_ids "$TARGET_PANEL")
+
+# ------------------------------------------------------------
+# Add GenMon if it does not already exist
+# ------------------------------------------------------------
+if [[ -z "$GENMON_ID" ]]; then
+
+    declare -A BEFORE_IDS=()
+
+    while IFS= read -r id; do
+        [[ -z "$id" ]] && continue
+        BEFORE_IDS["$id"]=1
+    done < <(get_plugin_ids "$TARGET_PANEL")
+
+    xfce4-panel --add=genmon >/dev/null 2>&1 || true
+
+    # Give Xfce a moment to register the new plugin
+    sleep 1
+
+    # Find the newly created GenMon plugin
+    while IFS= read -r id; do
+        [[ -z "$id" ]] && continue
+
+        if [[ -z "${BEFORE_IDS[$id]+x}" ]]; then
+            type="$(get_plugin_type "$id")"
+
+            if [[ "$type" == "genmon" ]]; then
+                GENMON_ID="$id"
+                break
+            fi
+        fi
+    done < <(get_plugin_ids "$TARGET_PANEL")
+fi
+
+# ------------------------------------------------------------
+# If GenMon still cannot be found, exit quietly.
+# The autostart entry will try again on the next login.
+# ------------------------------------------------------------
+if [[ -z "$GENMON_ID" ]]; then
+    exit 0
+fi
+
+# ------------------------------------------------------------
+# Configure GenMon
+# ------------------------------------------------------------
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/command" \
+    --create \
+    -t string \
+    -s "$HOSTS_SCRIPT" \
+    2>/dev/null || true
+
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/use-label" \
+    --create \
+    -t bool \
+    -s false \
+    2>/dev/null || true
+
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/enable-single-row" \
+    --create \
+    -t bool \
+    -s true \
+    2>/dev/null || true
+
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/update-period" \
+    --create \
+    -t int \
+    -s 500 \
+    2>/dev/null || true
+
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/font" \
+    --create \
+    -t string \
+    -s "Arial 17" \
+    2>/dev/null || true
+
+xfconf-query \
+    -c xfce4-panel \
+    -p "/plugins/plugin-${GENMON_ID}/text" \
+    --create \
+    -t string \
+    -s "" \
+    2>/dev/null || true
+
+# ------------------------------------------------------------
+# Move GenMon immediately before the clock
+# ------------------------------------------------------------
+mapfile -t CURRENT_IDS < <(get_plugin_ids "$TARGET_PANEL")
+
+CLOCK_ID=""
+
+for id in "${CURRENT_IDS[@]}"; do
+    type="$(get_plugin_type "$id")"
+
+    if [[ "$type" == "clock" ]]; then
+        CLOCK_ID="$id"
+        break
+    fi
+done
+
+NEW_ORDER=()
+INSERTED=false
+
+for id in "${CURRENT_IDS[@]}"; do
+
+    # Do not duplicate GenMon in the list
+    if [[ "$id" == "$GENMON_ID" ]]; then
+        continue
+    fi
+
+    # Put GenMon immediately before the clock
+    if [[ -n "$CLOCK_ID" && "$id" == "$CLOCK_ID" && "$INSERTED" == false ]]; then
+        NEW_ORDER+=("$GENMON_ID")
+        INSERTED=true
+    fi
+
+    NEW_ORDER+=("$id")
+done
+
+# If no clock was found, put GenMon at the end
+if [[ "$INSERTED" == false ]]; then
+    NEW_ORDER+=("$GENMON_ID")
+fi
+
+# Write the new plugin order
+XFCONF_CMD=(
+    xfconf-query
+    -c xfce4-panel
+    -p "/panels/${TARGET_PANEL}/plugin-ids"
+    -a
+    -t int
+)
+
+for id in "${NEW_ORDER[@]}"; do
+    XFCONF_CMD+=(-s "$id")
+done
+
+"${XFCONF_CMD[@]}" 2>/dev/null || true
+
+# Reload the panel
+xfce4-panel -r >/dev/null 2>&1 || true
+
+exit 0
+EOF
+
+    chmod +x "$panel_script"
+    chown kali:kali "$panel_script"
+
+    # --------------------------------------------------------
+    # Autostart entry
+    # --------------------------------------------------------
+    cat > "$autostart_file" << EOF
+[Desktop Entry]
+Type=Application
+Name=Kali Restore Panel
+Comment=Configure the /etc/hosts GenMon panel item
+Exec=${panel_script}
+Terminal=false
+Hidden=false
+NoDisplay=true
+X-GNOME-Autostart-enabled=true
+EOF
+
+    chmod 644 "$autostart_file"
+    chown kali:kali "$autostart_file"
+
+    log "Hosts status panel configuration created."
+    info "GenMon update interval: 0.5 seconds"
+    info "GenMon font: Arial 17"
+    info "GenMon position: immediately before the clock"
+    info "GenMon icons: disabled"
+}
+
+# === NEW SECTION: Try to apply graphical settings immediately ===
+apply_graphical_configuration_now() {
+    local panel_pid
+    local display=""
+    local xauthority=""
+    local dbus_address=""
+    local runtime_dir="/run/user/$(id -u kali)"
+    local setup_script="/home/kali/.local/bin/kali-panel-setup.sh"
+    local power_script="/home/kali/.local/bin/kali-power-settings.sh"
+
+    panel_pid="$(pgrep -u kali -x xfce4-panel | head -n 1 || true)"
+
+    if [[ -z "$panel_pid" ]]; then
+        info "No active Xfce panel detected."
+        info "Graphical configuration will be applied automatically at next login."
+        return
+    fi
+
+    # Read the environment of the running Xfce panel
+    while IFS= read -r -d '' entry; do
+        case "$entry" in
+            DISPLAY=*)
+                display="${entry#DISPLAY=}"
+                ;;
+            XAUTHORITY=*)
+                xauthority="${entry#XAUTHORITY=}"
+                ;;
+            DBUS_SESSION_BUS_ADDRESS=*)
+                dbus_address="${entry#DBUS_SESSION_BUS_ADDRESS=}"
+                ;;
+        esac
+    done < "/proc/${panel_pid}/environ"
+
+    if [[ -z "$display" ]]; then
+        info "Could not determine the X display."
+        info "Graphical configuration will be applied automatically at next login."
+        return
+    fi
+
+    log "Applying graphical configuration to the current Xfce session..."
+
+    runuser -u kali -- env \
+        DISPLAY="$display" \
+        XAUTHORITY="${xauthority:-/home/kali/.Xauthority}" \
+        DBUS_SESSION_BUS_ADDRESS="${dbus_address:-}" \
+        XDG_RUNTIME_DIR="$runtime_dir" \
+        "$power_script" \
+        >/dev/null 2>&1 || true
+
+    runuser -u kali -- env \
+        DISPLAY="$display" \
+        XAUTHORITY="${xauthority:-/home/kali/.Xauthority}" \
+        DBUS_SESSION_BUS_ADDRESS="${dbus_address:-}" \
+        XDG_RUNTIME_DIR="$runtime_dir" \
+        "$setup_script" \
+        >/dev/null 2>&1 || true
+
+    log "Current Xfce session configuration applied."
 }
 
 post_install_symlinks() {
@@ -424,12 +1023,36 @@ summary() {
     linpeas.sh, winPEASx64.exe, winPEASx86.exe
     rockyou.txt (extracted)
 
-  Additional: wfuzz, arjun (pip3)
+  Additional:
+    wfuzz, arjun
 
-  Shell: ~/.zshrc.d/commands with aliases (htb, hs)
-  Sudo:  %sudo NOPASSWD: ALL
+  Shell:
+    ~/.zshrc.d/commands
+    aliases: htb, hs, nmap-all, enum4, smb, mkdir, ll, la, l
 
-  Log: ${LOGFILE}
+  Sudo:
+    %sudo NOPASSWD: ALL
+
+  /etc/hosts:
+    Empty lines removed
+    Panel displays the last non-empty line
+
+  Xfce power management:
+    Screen blanking: disabled
+    DPMS: disabled
+    Automatic sleep: disabled
+    Screensaver: disabled
+    Battery power profile: performance
+
+  Xfce panel:
+    Generic Monitor (GenMon)
+    Update interval: 0.5 seconds
+    Font: Arial 17
+    Icons: disabled
+    Position: immediately before the clock
+
+  Log:
+    ${LOGFILE}
 
 EOF
 }
@@ -454,9 +1077,17 @@ clone_tools
 pip_installs
 download_static_bins
 
-# === NEW FUNCTION CALLS ===
+# === Configuration ===
 configure_shell
 configure_sudo_nopasswd
+clean_hosts_file
+configure_power_management
+configure_hosts_panel
+
+# Apply graphical settings immediately when an Xfce session is active.
+# The autostart entries also guarantee that the configuration is
+# reapplied automatically after the next login.
+apply_graphical_configuration_now
 
 post_install_symlinks
 summary
