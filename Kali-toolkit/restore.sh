@@ -44,60 +44,27 @@ install_apt_pkgs() {
     log "Installing APT packages..."
 
     local -a apt_pkgs=(
-        seclists
-        enum4linux
-        smbclient
-        smbmap
-        impacket-scripts
-        netexec
-        bloodhound
-        chisel
-        ligolo-ng
-        ffuf
-        gobuster
-        dirb
-        nikto
-        wpscan
-        evil-winrm
-        hydra
-        john
-        hashcat
-        metasploit-framework
-        sqlmap
-        burpsuite
-        wireshark
-        responder
-        mitm6
-        bettercap
-        exploitdb
-        jq
-        netcat-openbsd
-        ncat
-        tmux
-        rlwrap
-        xclip
-        python3-venv
-        python3-pip
-        bat
-        fzf
-        pipx
-        xfce4-genmon-plugin
-        power-profiles-daemon
+        seclists enum4linux smbclient smbmap impacket-scripts
+        netexec bloodhound chisel ligolo-ng ffuf gobuster dirb
+        nikto wpscan evil-winrm hydra john hashcat
+        metasploit-framework sqlmap burpsuite wireshark responder
+        mitm6 bettercap exploitdb jq netcat-openbsd ncat tmux
+        rlwrap xclip python3-venv python3-pip bat fzf pipx
+        xfce4-genmon-plugin power-profiles-daemon
     )
 
     local success=0 fail=0
     for pkg in "${apt_pkgs[@]}"; do
         if apt install -y "$pkg" &>> "${LOGFILE}"; then
-            ((success++))
+            ((++success))   # <-- fixed: pre-increment
         else
             warn "Package '$pkg' not found in repos — skipping."
-            ((fail++))
+            ((++fail))      # <-- fixed: pre-increment
         fi
     done
 
     log "APT packages: $success installed, $fail skipped."
 }
-
 # ------------------------------------------------------------
 # pip packages for tools not available in APT (or newer versions)
 # ------------------------------------------------------------
