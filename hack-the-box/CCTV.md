@@ -20,7 +20,9 @@
 ## Privilege Escalation `CVE 2025-60787` (motionEye)
 - Command Injection: Exploiting the `Image File Name` parameter within the motionEye dashboard
 - Sudoers Manipulation: Injecting a malicious payload to modify system permissions
-- Command: `$(echo "mark ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers).%Y-%m-%d`
+bash ```
+$(echo "mark ALL=(ALL) NOPASSWD:ALL" >> /etc/sudoers).%Y-%m-%d
+```
 
 ## Root Acquisition and System Compromise
 - Sudo Analytics: Leveraging NOPASSWD misconfiguration to execute commands with root privileges
