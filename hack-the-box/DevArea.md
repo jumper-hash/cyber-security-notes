@@ -8,7 +8,7 @@
 - Identification of Apache CXF framework and discovery of a SOAP endpoint.
 ## Exploitation and Data Exfiltration `CVE-2019-17638`
 LFI via XOP/MTOM: Exploited Local File Inclusion vulnerability in the SOAP service using a custom Bash script.
-
+``` bash
 		#!/bin/bash
 		if [ -z "$1" ]; then
 		echo "Usage $0 /path/to/file"
@@ -38,7 +38,7 @@ LFI via XOP/MTOM: Exploited Local File Inclusion vulnerability in the SOAP servi
 		
 		echo -e "\n ========================\n"
 		echo "$result" | sed -n 's/.*Content: \(.*\)<\/return>.*/\1/p' | tr -d '[:space:]' | base64 -d		
-		
+```	
 Credential Leakage: Read `/etc/systemd/system/hoverfly.service` which revealed cleartext credentials for the HoverFly admin panel.
 
 ## `CVE-2025-54123`
