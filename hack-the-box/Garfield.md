@@ -28,9 +28,8 @@
 - Group Membership: Verified that both accounts are members of the `Remote Management Users` group, confirming WinRM as a viable lateral movement vector.
 - ACL Analysis: Employed `bloodyAD` to audit Object Security, revealing that `j.arbuckle` possesses write permissions over the `l.wilson` user object.
 - `bloodyAD get object` for each user:
-  
-        defined both account location inside `Users`
-        showed, that `l.wilson logs` in more often than `l.wilson_adm`
+  - defined both account location inside `Users`
+  - showed, that `l.wilson logs` in more often than `l.wilson_adm`
 
 ## Exploitation: Logon Script Injection
 - Persistence via ADSI: Leveraged write permissions to modify the `scriptPath` attribute of the `l.wilson` account, pointing it to a malicious version of `printerDetect.bat`.
