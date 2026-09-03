@@ -92,7 +92,3 @@ interface Vlan10
 * `ping` between VLAN 10 and VLAN 20 returned `Destination Host Unreachable`.
 * `ping` from VLAN 10 to VLAN 40 server succeeded.
 * `HTTP` request from VLAN 10 to DMZ server succeeded, while `ICMP` ping to DMZ was dropped.
-
-
-
-```
