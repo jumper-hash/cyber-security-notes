@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import argparse
+import json
 import re
 import subprocess
 import sys
@@ -37,8 +38,19 @@ HTTP_PORTS = {
 }
 
 
+def print_section(title):
+    print()
+    print("=" * 70)
+    print(f"[+] {title}")
+    print("=" * 70)
+
+
 def run_command(command, output_file=None):
-    print(f"[+] Running: {' '.join(command)}")
+    print()
+    print(f"[>] Command: {' '.join(command)}")
+
+    if output_file:
+        print(f"[>] Output : {output_file}")
 
     try:
         result = subprocess.run(
@@ -57,6 +69,8 @@ def run_command(command, output_file=None):
             result.stdout,
             encoding="utf-8",
         )
+
+    print(f"[<] Exit code: {result.returncode}")
 
     return result.returncode, result.stdout
 
@@ -85,6 +99,8 @@ def detect_http_ports(open_ports):
 
 
 def http_request(url, timeout=8):
+    print(f"[>] HTTP GET: {url}")
+
     request = urllib.request.Request(
         url,
         method="GET",
@@ -121,10 +137,12 @@ def http_request(url, timeout=8):
             exc.read(),
         )
 
-    except urllib.error.URLError:
+    except urllib.error.URLError as exc:
+        print(f"[!] HTTP error: {exc}")
         return None, None, None, None
 
-    except Exception:
+    except Exception as exc:
+        print(f"[!] HTTP request failed: {exc}")
         return None, None, None, None
 
 
@@ -133,7 +151,7 @@ def extract_hostname(url):
         hostname = urlparse(url).hostname
 
         if hostname:
-            return hostname
+            return hostname.lower()
     except Exception:
         pass
 
@@ -143,14 +161,42 @@ def extract_hostname(url):
     )
 
     if match:
-        return match.group(1)
+        return match.group(1).lower()
 
     return None
 
 
-def update_hosts_file(ip, hostname):
-    if not hostname:
+def get_htb_section(lines):
+    try:
+        start = lines.index(HTB_START)
+        end = lines.index(
+            HTB_END,
+            start + 1,
+        )
+        return start, end
+    except ValueError:
+        return None, None
+
+
+def update_hosts_file(ip, hostnames):
+    if not hostnames:
         return False
+
+    hostnames = sorted(
+        {
+            hostname.strip().lower()
+            for hostname in hostnames
+            if hostname.strip()
+        }
+    )
+
+    if not hostnames:
+        return False
+
+    print(
+        "[>] Updating /etc/hosts for "
+        f"{ip}: {' '.join(hostnames)}"
+    )
 
     try:
         content = HOSTS_FILE.read_text(
@@ -165,53 +211,57 @@ def update_hosts_file(ip, hostname):
 
     lines = content.splitlines()
 
-    try:
-        start = lines.index(HTB_START)
-        end = lines.index(
-            HTB_END,
-            start + 1,
-        )
-    except ValueError:
+    start, end = get_htb_section(lines)
+
+    if start is None:
         print(
             "[!] Could not find "
             "###HTB / ###END_HTB markers."
         )
         return False
 
-    # Comment all active lines inside the HTB section.
+    # Comment every active entry in the HTB section.
+    commented = 0
+
     for i in range(start + 1, end):
         stripped = lines[i].strip()
 
         if stripped and not stripped.startswith("#"):
             lines[i] = "#" + lines[i]
+            commented += 1
 
-    # Remove old occurrences of this hostname
-    # inside the managed HTB section.
-    filtered = []
+    if commented:
+        print(
+            f"[+] Commented {commented} active HTB entries."
+        )
+
+    # Remove old entries for this IP from the managed section.
+    # Commented entries are left untouched; only active entries
+    # are ever replaced.
+    start, end = get_htb_section(lines)
+
+    new_lines = []
 
     for i, line in enumerate(lines):
         if start < i < end:
-            uncommented = line.lstrip("#").strip()
+            stripped = line.strip()
 
-            if re.search(
-                rf"(^|\s){re.escape(hostname)}(\s|$)",
-                uncommented,
+            if (
+                stripped
+                and not stripped.startswith("#")
+                and stripped.split()[0] == ip
             ):
                 continue
 
-        filtered.append(line)
+        new_lines.append(line)
 
-    lines = filtered
+    lines = new_lines
 
-    start = lines.index(HTB_START)
-    end = lines.index(
-        HTB_END,
-        start + 1,
-    )
+    start, end = get_htb_section(lines)
 
-    entry = f"{ip:<24}{hostname}"
+    # One IP + all hostnames in one line.
+    entry = f"{ip}\t{' '.join(hostnames)}"
 
-    # Add target as the last active HTB entry.
     lines.insert(end, entry)
 
     try:
@@ -227,22 +277,109 @@ def update_hosts_file(ip, hostname):
         return False
 
     print(
-        f"[+] /etc/hosts updated: {entry}"
+        f"[+] Added: {entry}"
     )
 
     return True
 
 
-def extract_domains(text):
-    return sorted(
-        set(
-            domain.lower()
-            for domain in re.findall(
-                r"\b(?:[a-zA-Z0-9-]+\.)+[a-zA-Z]{2,}\b",
-                text,
+def append_hostnames_for_ip(ip, hostnames):
+    """
+    Read current managed HTB entries and rebuild the active
+    entry for the target IP while preserving old commented entries.
+    """
+    if not hostnames:
+        return False
+
+    hostnames = {
+        h.strip().lower()
+        for h in hostnames
+        if h.strip()
+    }
+
+    try:
+        content = HOSTS_FILE.read_text(
+            encoding="utf-8",
+        )
+    except PermissionError:
+        print(
+            "[!] Cannot read /etc/hosts. "
+            "Run the script with sudo."
+        )
+        return False
+
+    lines = content.splitlines()
+
+    start, end = get_htb_section(lines)
+
+    if start is None:
+        print(
+            "[!] Could not find "
+            "###HTB / ###END_HTB markers."
+        )
+        return False
+
+    existing_active = set()
+
+    for i in range(start + 1, end):
+        stripped = lines[i].strip()
+
+        if not stripped or stripped.startswith("#"):
+            continue
+
+        parts = stripped.split()
+
+        if not parts:
+            continue
+
+        if parts[0] == ip:
+            existing_active.update(
+                parts[1:]
+            )
+
+    hostnames.update(existing_active)
+
+    return update_hosts_file(
+        ip,
+        hostnames,
+    )
+
+
+def parse_ffuf_json(json_file, base_domain):
+    discovered = set()
+
+    try:
+        data = json.loads(
+            Path(json_file).read_text(
+                encoding="utf-8"
             )
         )
-    )
+    except FileNotFoundError:
+        return discovered
+
+    except json.JSONDecodeError as exc:
+        print(
+            f"[!] Could not parse ffuf JSON: {exc}"
+        )
+        return discovered
+
+    results = data.get("results", [])
+
+    for result in results:
+        host = result.get("host")
+
+        if not host:
+            continue
+
+        host = host.strip().lower()
+
+        # Only accept actual subdomains of the target domain.
+        suffix = f".{base_domain.lower()}"
+
+        if host.endswith(suffix):
+            discovered.add(host)
+
+    return discovered
 
 
 def main():
@@ -250,7 +387,7 @@ def main():
         description=(
             "HTB recon automation: "
             "Nmap + redirect detection + "
-            "subdomains + ffuf"
+            "VHost enumeration + endpoint fuzzing"
         )
     )
 
@@ -305,21 +442,34 @@ def main():
         output_dir / "ffuf-vhosts.txt"
     )
 
+    vhosts_json = (
+        output_dir / "ffuf-vhosts.json"
+    )
+
     directories_file = (
         output_dir / "ffuf-directories.txt"
     )
 
-    print(
-        f"[+] Target: {ip}"
-    )
+    # =========================================================
+    # Header
+    # =========================================================
 
-    print(
-        f"[+] Output: {output_dir}"
-    )
+    print()
+    print("=" * 70)
+    print(" HTB RECON")
+    print("=" * 70)
+    print(f"[+] Target : {ip}")
+    print(f"[+] Output : {output_dir}")
+    print(f"[+] SecLists: {SECLISTS}")
+    print("=" * 70)
 
     # =========================================================
     # 1. Full TCP scan
     # =========================================================
+
+    print_section(
+        "1/9 - Full TCP port scan"
+    )
 
     _, full_output = run_command(
         [
@@ -344,14 +494,23 @@ def main():
         )
         return 1
 
+    print()
     print(
-        "[+] Open ports: "
-        + ", ".join(open_ports)
+        "[+] Open TCP ports:"
     )
 
+    for port in open_ports:
+        print(
+            f"    - {port}"
+        )
+
     # =========================================================
-    # 2. Version + default scripts
+    # 2. Service/version detection
     # =========================================================
+
+    print_section(
+        "2/9 - Service and version detection"
+    )
 
     run_command(
         [
@@ -366,8 +525,12 @@ def main():
     )
 
     # =========================================================
-    # 3. Detect HTTP services
+    # 3. HTTP detection
     # =========================================================
+
+    print_section(
+        "3/9 - HTTP service detection"
+    )
 
     http_ports = detect_http_ports(
         open_ports
@@ -379,16 +542,27 @@ def main():
         )
         return 0
 
-    print(
-        "[+] HTTP ports detected: "
-        + ", ".join(http_ports)
-    )
+    for port in http_ports:
+        scheme = (
+            "https"
+            if port == "443"
+            else "http"
+        )
 
-    discovered_hosts = set()
+        print(
+            f"[+] HTTP service: "
+            f"{scheme}://{ip}:{port}"
+        )
 
     # =========================================================
     # 4. Redirect detection
     # =========================================================
+
+    print_section(
+        "4/9 - HTTP redirect detection"
+    )
+
+    discovered_hosts = set()
 
     with redirects_file.open(
         "w",
@@ -404,6 +578,11 @@ def main():
             )
 
             url = f"{scheme}://{ip}/"
+
+            print()
+            print(
+                f"[+] Checking {url}"
+            )
 
             final_url, status, headers, _ = (
                 http_request(url)
@@ -423,8 +602,15 @@ def main():
                 )
 
                 print(
-                    f"[+] Redirect: "
-                    f"{url} -> {redirect_url}"
+                    f"[+] Redirect found:"
+                )
+
+                print(
+                    f"    {url}"
+                )
+
+                print(
+                    f"    -> {redirect_url}"
                 )
 
                 rf.write(
@@ -446,11 +632,21 @@ def main():
                         hostname
                     )
 
-            elif final_url and final_url != url:
+            elif (
+                final_url
+                and final_url != url
+            ):
 
                 print(
-                    f"[+] Redirect: "
-                    f"{url} -> {final_url}"
+                    f"[+] Redirect detected:"
+                )
+
+                print(
+                    f"    {url}"
+                )
+
+                print(
+                    f"    -> {final_url}"
                 )
 
                 rf.write(
@@ -475,8 +671,7 @@ def main():
             else:
 
                 print(
-                    f"[-] No redirect: "
-                    f"{url} "
+                    f"[-] No redirect "
                     f"(HTTP {status})"
                 )
 
@@ -487,42 +682,62 @@ def main():
                 )
 
     # =========================================================
-    # 5. Update /etc/hosts
+    # 5. /etc/hosts
     # =========================================================
 
-    for hostname in sorted(
-        discovered_hosts
-    ):
+    print_section(
+        "5/9 - Updating /etc/hosts"
+    )
+
+    if discovered_hosts:
+
         update_hosts_file(
             ip,
-            hostname,
+            discovered_hosts,
+        )
+
+    else:
+
+        print(
+            "[-] No hostname discovered "
+            "from redirect."
         )
 
     # =========================================================
-    # 6. Select target hostname
+    # 6. Target selection
     # =========================================================
 
+    print_section(
+        "6/9 - Selecting web target"
+    )
+
     if discovered_hosts:
+
         target_domain = sorted(
             discovered_hosts
         )[0]
 
         print(
-            f"[+] Web target: "
+            f"[+] Target domain: "
             f"{target_domain}"
         )
 
     else:
+
         target_domain = None
 
         print(
-            "[+] No hostname discovered, "
-            "using IP."
+            "[+] No domain found. "
+            "Using IP."
         )
 
     # =========================================================
-    # 7. Select HTTP scheme
+    # 7. Scheme selection
     # =========================================================
+
+    print_section(
+        "7/9 - Selecting HTTP scheme"
+    )
 
     if (
         "443" in http_ports
@@ -531,6 +746,10 @@ def main():
         scheme = "https"
     else:
         scheme = "http"
+
+    print(
+        f"[+] Scheme: {scheme}"
+    )
 
     if target_domain:
         base_url = (
@@ -543,20 +762,53 @@ def main():
             f"{ip}"
         )
 
+    print(
+        f"[+] Base URL: {base_url}"
+    )
+
     # =========================================================
-    # 8. Subdomain / VHost enumeration
+    # 8. VHost / subdomain enumeration
     # =========================================================
 
-    if target_domain:
+    print_section(
+        "8/9 - VHost / subdomain enumeration"
+    )
+
+    if not target_domain:
+
+        print(
+            "[-] Skipping VHost enumeration: "
+            "no target domain."
+        )
+
+        subdomains_file.write_text(
+            "",
+            encoding="utf-8",
+        )
+
+    else:
+
+        found_subdomains = set()
+
+        # -----------------------------------------------------
+        # ffuf VHost
+        # -----------------------------------------------------
 
         if not SUBDOMAIN_WORDLIST.exists():
 
             print(
-                "[!] Missing wordlist: "
-                f"{SUBDOMAIN_WORDLIST}"
+                "[!] Missing wordlist:"
+            )
+
+            print(
+                f"    {SUBDOMAIN_WORDLIST}"
             )
 
         else:
+
+            print(
+                "[+] Starting ffuf VHost fuzzing"
+            )
 
             run_command(
                 [
@@ -570,13 +822,51 @@ def main():
                     "-mc",
                     "200,204,301,302,307,401,403",
                     "-ac",
+                    "-of",
+                    "json",
+                    "-o",
+                    str(vhosts_json),
                 ],
                 vhosts_file,
             )
 
+            ffuf_hosts = parse_ffuf_json(
+                vhosts_json,
+                target_domain,
+            )
+
+            if ffuf_hosts:
+
+                print(
+                    "[+] VHost discoveries:"
+                )
+
+                for hostname in sorted(
+                    ffuf_hosts
+                ):
+                    print(
+                        f"    - {hostname}"
+                    )
+
+                found_subdomains.update(
+                    ffuf_hosts
+                )
+
+            else:
+
+                print(
+                    "[-] No valid VHosts "
+                    "found by ffuf."
+                )
+
         # -----------------------------------------------------
         # subfinder
         # -----------------------------------------------------
+
+        print()
+        print(
+            "[+] Running subfinder..."
+        )
 
         rc, subfinder_output = run_command(
             [
@@ -588,36 +878,35 @@ def main():
             subfinder_file,
         )
 
-        found_subdomains = set()
+        if rc == 127:
 
-        if rc != 127:
+            print(
+                "[-] subfinder is not installed."
+            )
+
+        else:
 
             for line in (
                 subfinder_output.splitlines()
             ):
-                line = line.strip()
 
-                if line:
+                hostname = line.strip().lower()
+
+                if not hostname:
+                    continue
+
+                # Only accept valid subdomains
+                # belonging to the discovered domain.
+                if hostname.endswith(
+                    f".{target_domain.lower()}"
+                ):
                     found_subdomains.add(
-                        line
+                        hostname
                     )
 
-        try:
-
-            vhost_text = (
-                vhosts_file.read_text(
-                    encoding="utf-8"
-                )
-            )
-
-            found_subdomains.update(
-                extract_domains(
-                    vhost_text
-                )
-            )
-
-        except FileNotFoundError:
-            pass
+        # -----------------------------------------------------
+        # Save discovered subdomains
+        # -----------------------------------------------------
 
         subdomains_file.write_text(
             "\n".join(
@@ -631,34 +920,69 @@ def main():
             encoding="utf-8",
         )
 
-        # Add discovered subdomains to /etc/hosts.
+        print()
+        print(
+            f"[+] Total valid subdomains/VHosts: "
+            f"{len(found_subdomains)}"
+        )
+
         for hostname in sorted(
             found_subdomains
         ):
-            update_hosts_file(
-                ip,
-                hostname,
+            print(
+                f"    - {hostname}"
             )
 
-    else:
+        # -----------------------------------------------------
+        # Add all hosts to ONE /etc/hosts line
+        # -----------------------------------------------------
 
-        subdomains_file.write_text(
-            "",
-            encoding="utf-8",
+        all_hosts = set(
+            discovered_hosts
+        )
+
+        all_hosts.update(
+            found_subdomains
+        )
+
+        update_hosts_file(
+            ip,
+            all_hosts,
         )
 
     # =========================================================
     # 9. Endpoint fuzzing
     # =========================================================
 
+    print_section(
+        "9/9 - Web endpoint fuzzing"
+    )
+
     if not WEB_WORDLIST.exists():
 
         print(
-            "[!] Missing wordlist: "
-            f"{WEB_WORDLIST}"
+            "[!] Missing wordlist:"
+        )
+
+        print(
+            f"    {WEB_WORDLIST}"
         )
 
     else:
+
+        print(
+            f"[+] Target: "
+            f"{base_url}/FUZZ"
+        )
+
+        print(
+            f"[+] Wordlist: "
+            f"{WEB_WORDLIST}"
+        )
+
+        print(
+            "[+] Starting ffuf endpoint fuzzing..."
+        )
 
         run_command(
             [
@@ -674,13 +998,43 @@ def main():
             directories_file,
         )
 
-    print()
-    print(
-        "[+] Recon complete."
+        print(
+            "[+] Endpoint fuzzing finished."
+        )
+
+    # =========================================================
+    # Summary
+    # =========================================================
+
+    print_section(
+        "RECON COMPLETE"
     )
 
     print(
-        f"[+] Results: {output_dir}"
+        f"[+] Target : {ip}"
+    )
+
+    print(
+        f"[+] Ports  : {', '.join(open_ports)}"
+    )
+
+    if discovered_hosts:
+
+        print(
+            "[+] Hostnames:"
+        )
+
+        for hostname in sorted(
+            discovered_hosts
+        ):
+            print(
+                f"    - {hostname}"
+            )
+
+    print()
+    print(
+        f"[+] Results saved to: "
+        f"{output_dir}"
     )
 
     return 0
