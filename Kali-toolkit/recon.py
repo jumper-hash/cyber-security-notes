@@ -31,6 +31,8 @@ HTB_END = "###END_HTB"
 FFUF_MATCH_CODES = "200,204,301,302,307,401,403"
 FFUF_THREADS = "30"
 
+SSL_CONTEXT = ssl._create_unverified_context()
+
 
 class NoRedirectHandler(
     urllib.request.HTTPRedirectHandler
@@ -47,13 +49,7 @@ class NoRedirectHandler(
         return None
 
 
-SSL_CONTEXT = ssl._create_unverified_context()
-
 HTTP_OPENER = urllib.request.build_opener(
-    NoRedirectHandler()
-)
-
-HTTPS_OPENER = urllib.request.build_opener(
     NoRedirectHandler()
 )
 
@@ -89,9 +85,7 @@ def run_command(command, output_file=None):
 
     except KeyboardInterrupt:
         print()
-        print(
-            "[!] Command interrupted."
-        )
+        print("[!] Interrupted by user.")
         return 130, ""
 
     if output_file:
@@ -148,7 +142,10 @@ def parse_nmap_xml(xml_file):
             "portid"
         )
 
-        if protocol != "tcp" or not portid:
+        if (
+            protocol != "tcp"
+            or not portid
+        ):
             continue
 
         state = port.find(
@@ -168,23 +165,49 @@ def parse_nmap_xml(xml_file):
         if service is None:
             continue
 
+        scripts = []
+
+        for script in port.findall(
+            "./script"
+        ):
+            script_id = script.get(
+                "id"
+            )
+
+            output = script.get(
+                "output"
+            )
+
+            if script_id:
+                scripts.append(
+                    {
+                        "id": script_id,
+                        "output": output or "",
+                    }
+                )
+
         services[portid] = {
             "name": service.get(
                 "name",
-                ""
+                "",
             ),
             "product": service.get(
                 "product",
-                ""
+                "",
             ),
             "version": service.get(
                 "version",
-                ""
+                "",
+            ),
+            "extrainfo": service.get(
+                "extrainfo",
+                "",
             ),
             "tunnel": service.get(
                 "tunnel",
-                ""
+                "",
             ),
+            "scripts": scripts,
         }
 
     return services
@@ -193,17 +216,17 @@ def parse_nmap_xml(xml_file):
 def is_web_service(service):
     name = service.get(
         "name",
-        ""
+        "",
     ).lower()
 
     product = service.get(
         "product",
-        ""
+        "",
     ).lower()
 
     tunnel = service.get(
         "tunnel",
-        ""
+        "",
     ).lower()
 
     web_names = {
@@ -211,8 +234,6 @@ def is_web_service(service):
         "https",
         "http-alt",
         "http-proxy",
-        "http-api",
-        "http-rpc-epmap",
     }
 
     if name in web_names:
@@ -224,10 +245,13 @@ def is_web_service(service):
     ):
         return True
 
-    if tunnel == "ssl" and (
-        "http" in name
-        or "apache" in product
-        or "nginx" in product
+    if (
+        tunnel == "ssl"
+        and (
+            "http" in name
+            or "apache" in product
+            or "nginx" in product
+        )
     ):
         return True
 
@@ -237,12 +261,12 @@ def is_web_service(service):
 def get_web_scheme(service):
     name = service.get(
         "name",
-        ""
+        "",
     ).lower()
 
     tunnel = service.get(
         "tunnel",
-        ""
+        "",
     ).lower()
 
     if (
@@ -254,10 +278,7 @@ def get_web_scheme(service):
     return "http"
 
 
-def http_request(
-    url,
-    timeout=8,
-):
+def http_request(url, timeout=8):
     request = urllib.request.Request(
         url,
         method="GET",
@@ -266,23 +287,17 @@ def http_request(
         },
     )
 
-    opener = (
-        HTTPS_OPENER
-        if url.startswith("https://")
-        else HTTP_OPENER
-    )
-
     try:
         if url.startswith(
             "https://"
         ):
-            response = opener.open(
+            response = HTTP_OPENER.open(
                 request,
                 timeout=timeout,
                 context=SSL_CONTEXT,
             )
         else:
-            response = opener.open(
+            response = HTTP_OPENER.open(
                 request,
                 timeout=timeout,
             )
@@ -298,10 +313,14 @@ def http_request(
             exc.headers,
         )
 
-    except urllib.error.URLError as exc:
+    except (
+        urllib.error.URLError,
+        TimeoutError,
+    ) as exc:
         print(
             f"[!] HTTP error: {exc}"
         )
+
         return (
             None,
             None,
@@ -311,25 +330,24 @@ def http_request(
         print(
             f"[!] HTTP request failed: {exc}"
         )
+
         return (
             None,
             None,
         )
 
 
-def extract_hostname(
-    url
-):
+def extract_hostname(url):
     if not url:
         return None
 
     try:
-        hostname = urlparse(
+        parsed = urlparse(
             url
-        ).hostname
+        )
 
-        if hostname:
-            return hostname.lower()
+        if parsed.hostname:
+            return parsed.hostname.lower()
 
     except Exception:
         pass
@@ -400,15 +418,12 @@ def update_hosts_file(
     if start is None:
         print(
             "[!] Missing "
-            "###HTB / ###END_HTB."
+            "###HTB / ###END_HTB markers."
         )
 
         return False
 
-    # ---------------------------------------------------------
-    # Comment all active HTB entries
-    # ---------------------------------------------------------
-
+    # Comment every active HTB entry.
     for i in range(
         start + 1,
         end,
@@ -420,10 +435,6 @@ def update_hosts_file(
             and not stripped.startswith("#")
         ):
             lines[i] = "#" + lines[i]
-
-    # ---------------------------------------------------------
-    # Insert one active entry
-    # ---------------------------------------------------------
 
     start, end = get_htb_section(
         lines
@@ -495,16 +506,13 @@ def parse_vhosts(
 ):
     hosts = set()
 
-    results = parse_ffuf_json(
-        json_file
-    )
-
     suffix = (
         f".{base_domain.lower()}"
     )
 
-    for result in results:
-
+    for result in parse_ffuf_json(
+        json_file
+    ):
         host = result.get(
             "host"
         )
@@ -538,29 +546,29 @@ def print_vhost_results(
         return
 
     print(
-        "[+] VHosts:"
+        "[+] VHosts found:"
     )
 
     for result in results:
 
         host = result.get(
             "host",
-            "?"
+            "?",
         )
 
         status = result.get(
             "status",
-            "?"
+            "?",
         )
 
         size = result.get(
             "length",
-            "?"
+            "?",
         )
 
         words = result.get(
             "words",
-            "?"
+            "?",
         )
 
         print(
@@ -571,7 +579,7 @@ def print_vhost_results(
         )
 
 
-def print_directory_results(
+def print_endpoint_results(
     json_file,
 ):
     results = parse_ffuf_json(
@@ -585,29 +593,29 @@ def print_directory_results(
         return
 
     print(
-        "[+] Endpoints:"
+        "[+] Endpoints found:"
     )
 
     for result in results:
 
         url = result.get(
             "url",
-            "?"
+            "?",
         )
 
         status = result.get(
             "status",
-            "?"
+            "?",
         )
 
         size = result.get(
             "length",
-            "?"
+            "?",
         )
 
         words = result.get(
             "words",
-            "?"
+            "?",
         )
 
         print(
@@ -618,6 +626,49 @@ def print_directory_results(
         )
 
 
+def endpoint_results_for_summary(
+    json_file,
+):
+    results = []
+
+    for result in parse_ffuf_json(
+        json_file
+    ):
+        url = result.get(
+            "url"
+        )
+
+        if not url:
+            continue
+
+        parsed = urlparse(
+            url
+        )
+
+        results.append(
+            {
+                "path": (
+                    parsed.path
+                    or "/"
+                ),
+                "status": result.get(
+                    "status"
+                ),
+                "size": result.get(
+                    "length"
+                ),
+                "words": result.get(
+                    "words"
+                ),
+                "lines": result.get(
+                    "lines"
+                ),
+            }
+        )
+
+    return results
+
+
 def run_vhost_fuzzing(
     base_url,
     domain,
@@ -626,7 +677,7 @@ def run_vhost_fuzzing(
     if not SUBDOMAIN_WORDLIST.exists():
 
         print(
-            "[!] VHost wordlist missing:"
+            "[!] Missing VHost wordlist:"
         )
 
         print(
@@ -636,11 +687,13 @@ def run_vhost_fuzzing(
         return set()
 
     json_file = (
-        output_dir / "vhosts.json"
+        output_dir
+        / "vhosts.json"
     )
 
     text_file = (
-        output_dir / "vhosts.txt"
+        output_dir
+        / "vhosts.txt"
     )
 
     print(
@@ -667,7 +720,9 @@ def run_vhost_fuzzing(
             "-of",
             "json",
             "-o",
-            str(json_file),
+            str(
+                json_file
+            ),
         ],
         text_file,
     )
@@ -689,14 +744,15 @@ def run_vhost_fuzzing(
     )
 
 
-def run_directory_fuzzing(
+def run_endpoint_fuzzing(
     base_url,
+    hostname,
     output_dir,
 ):
     if not WEB_WORDLIST.exists():
 
         print(
-            "[!] Web wordlist missing:"
+            "[!] Missing endpoint wordlist:"
         )
 
         print(
@@ -705,18 +761,25 @@ def run_directory_fuzzing(
 
         return
 
+    safe_hostname = re.sub(
+        r"[^a-zA-Z0-9._-]",
+        "_",
+        hostname,
+    )
+
     json_file = (
         output_dir
-        / "directories.json"
+        / f"endpoints-{safe_hostname}.json"
     )
 
     text_file = (
         output_dir
-        / "directories.txt"
+        / f"endpoints-{safe_hostname}.txt"
     )
 
     print(
-        "[+] Starting endpoint fuzzing..."
+        f"[+] Endpoint fuzzing: "
+        f"{hostname}"
     )
 
     rc, _ = run_command(
@@ -726,29 +789,34 @@ def run_directory_fuzzing(
             "-t",
             FFUF_THREADS,
             "-w",
-            str(WEB_WORDLIST),
+            str(
+                WEB_WORDLIST
+            ),
             "-u",
             f"{base_url}/FUZZ",
+            "-H",
+            f"Host: {hostname}",
             "-mc",
             FFUF_MATCH_CODES,
             "-ac",
             "-of",
             "json",
             "-o",
-            str(json_file),
+            str(
+                json_file
+            ),
         ],
         text_file,
     )
 
     if rc == 130:
-
         print(
             "[!] Endpoint fuzzing interrupted."
         )
 
         return
 
-    print_directory_results(
+    print_endpoint_results(
         json_file
     )
 
@@ -807,20 +875,17 @@ def main():
         / "redirects.txt"
     )
 
-    print()
-    print("=" * 72)
-    print(" HTB RECON")
-    print("=" * 72)
-
-    print(
-        f"[+] Target: {ip}"
+    summary_file = (
+        output_dir
+        / "summary.json"
     )
 
-    print(
-        f"[+] Output: {output_dir}"
-    )
-
-    print("=" * 72)
+    summary = {
+        "target": ip,
+        "ports": [],
+        "hosts": [],
+        "web": [],
+    }
 
     # =========================================================
     # 1. Full TCP scan
@@ -854,7 +919,7 @@ def main():
     if not open_ports:
 
         print(
-            "[!] No open TCP ports."
+            "[!] No open TCP ports found."
         )
 
         return 1
@@ -869,7 +934,7 @@ def main():
         )
 
     # =========================================================
-    # 2. Service / version detection
+    # 2. Service detection
     # =========================================================
 
     print_section(
@@ -898,59 +963,73 @@ def main():
         nmap_xml
     )
 
-    if services:
+    for port in sorted(
+        services,
+        key=int,
+    ):
+        service = services[
+            port
+        ]
 
-        print(
-            "[+] Detected services:"
+        summary["ports"].append(
+            {
+                "port": int(port),
+                "protocol": "tcp",
+                "service": service.get(
+                    "name"
+                ) or "unknown",
+                "product": service.get(
+                    "product"
+                ) or "",
+                "version": service.get(
+                    "version"
+                ) or "",
+                "extrainfo": service.get(
+                    "extrainfo"
+                ) or "",
+            }
         )
 
-        for port in sorted(
-            services,
-            key=int,
-        ):
+        name = service.get(
+            "name",
+            "",
+        )
 
-            service = services[
-                port
-            ]
+        product = service.get(
+            "product",
+            "",
+        )
 
-            name = service.get(
-                "name",
-                "-"
+        version = service.get(
+            "version",
+            "",
+        )
+
+        description = (
+            f"{product} {version}"
+        ).strip()
+
+        if description:
+
+            print(
+                f"    {port}/tcp "
+                f"{name:<12} "
+                f"{description}"
             )
 
-            product = service.get(
-                "product",
-                ""
+        else:
+
+            print(
+                f"    {port}/tcp "
+                f"{name or 'unknown'}"
             )
-
-            version = service.get(
-                "version",
-                ""
-            )
-
-            description = (
-                f"{product} {version}"
-            ).strip()
-
-            if description:
-                print(
-                    f"    {port}/tcp "
-                    f"{name:<12} "
-                    f"{description}"
-                )
-
-            else:
-                print(
-                    f"    {port}/tcp "
-                    f"{name}"
-                )
 
     # =========================================================
-    # 3. Detect ALL web services
+    # 3. Detect all web services
     # =========================================================
 
     print_section(
-        "3/4 - Web service enumeration"
+        "3/4 - Web service discovery"
     )
 
     web_services = {}
@@ -967,11 +1046,20 @@ def main():
     if not web_services:
 
         print(
-            "[-] No HTTP/HTTPS services detected."
+            "[-] No web services detected."
+        )
+
+        summary_file.write_text(
+            json.dumps(
+                summary,
+                indent=2,
+            ),
+            encoding="utf-8",
         )
 
         print(
-            "[+] Recon complete."
+            f"[+] Summary: "
+            f"{summary_file}"
         )
 
         return 0
@@ -985,16 +1073,15 @@ def main():
         key=int,
     ):
 
-        service = web_services[
-            port
-        ]
-
         scheme = get_web_scheme(
-            service
+            web_services[
+                port
+            ]
         )
 
         print(
-            f"    - {scheme}://"
+            f"    - "
+            f"{scheme}://"
             f"{ip}:{port}"
         )
 
@@ -1021,14 +1108,10 @@ def main():
             service
         )
 
-        base_url = (
+        ip_base_url = (
             f"{scheme}://"
             f"{ip}:{port}"
         )
-
-        # -----------------------------------------------------
-        # Per-port output directory
-        # -----------------------------------------------------
 
         port_dir = (
             output_dir
@@ -1040,39 +1123,34 @@ def main():
             exist_ok=True,
         )
 
-        print_section(
-            f"Web target {scheme}://{ip}:{port}"
-        )
+        web_summary = {
+            "port": int(port),
+            "scheme": scheme,
+            "base": ip_base_url,
+            "redirect": None,
+            "hosts": [],
+            "vhosts": [],
+            "endpoints": {},
+        }
 
-        print(
-            f"[+] Results: {port_dir}"
+        print_section(
+            f"Web target: "
+            f"{ip_base_url}"
         )
 
         # -----------------------------------------------------
-        # Redirect detection
+        # Redirect
         # -----------------------------------------------------
 
         print(
             "[+] Checking redirect..."
         )
 
-        status, headers = (
-            http_request(
-                f"{base_url}/"
-            )
+        status, headers = http_request(
+            f"{ip_base_url}/"
         )
 
-        redirect_file = (
-            port_dir
-            / "redirect.txt"
-        )
-
-        redirect_file.write_text(
-            "",
-            encoding="utf-8",
-        )
-
-        hostname = None
+        redirect_value = None
 
         if headers:
 
@@ -1082,28 +1160,33 @@ def main():
 
             if location:
 
-                redirect_url = urljoin(
-                    f"{base_url}/",
+                redirect_value = urljoin(
+                    f"{ip_base_url}/",
                     location,
                 )
 
-                hostname = (
-                    extract_hostname(
-                        redirect_url
-                    )
+                hostname = extract_hostname(
+                    redirect_value
                 )
 
                 print(
                     f"[+] Redirect: "
                     f"{status} -> "
-                    f"{redirect_url}"
+                    f"{redirect_value}"
                 )
 
-                redirect_file.write_text(
-                    redirect_url
+                (
+                    port_dir
+                    / "redirect.txt"
+                ).write_text(
+                    redirect_value
                     + "\n",
                     encoding="utf-8",
                 )
+
+                web_summary[
+                    "redirect"
+                ] = redirect_value
 
                 if hostname:
 
@@ -1116,6 +1199,12 @@ def main():
                         hostname
                     )
 
+                    web_summary[
+                        "hosts"
+                    ].append(
+                        hostname
+                    )
+
             else:
 
                 print(
@@ -1123,7 +1212,10 @@ def main():
                     f"(HTTP {status})"
                 )
 
-                redirect_file.write_text(
+                (
+                    port_dir
+                    / "redirect.txt"
+                ).write_text(
                     f"HTTP {status}\n",
                     encoding="utf-8",
                 )
@@ -1134,11 +1226,19 @@ def main():
                 "[-] No HTTP response."
             )
 
+            (
+                port_dir
+                / "redirect.txt"
+            ).write_text(
+                "No HTTP response\n",
+                encoding="utf-8",
+            )
+
         # -----------------------------------------------------
-        # /etc/hosts
+        # Initial /etc/hosts update
         # -----------------------------------------------------
 
-        if hostname:
+        if all_hosts:
 
             update_hosts_file(
                 ip,
@@ -1146,42 +1246,147 @@ def main():
             )
 
         # -----------------------------------------------------
-        # VHost fuzzing
+        # Select primary hostname
         # -----------------------------------------------------
 
-        if hostname:
+        primary_hostname = None
+
+        if web_summary["hosts"]:
+
+            primary_hostname = (
+                web_summary[
+                    "hosts"
+                ][0]
+            )
+
+        if primary_hostname:
+
+            # -------------------------------------------------
+            # VHost fuzzing
+            # -------------------------------------------------
 
             vhosts = run_vhost_fuzzing(
-                base_url,
-                hostname,
+                ip_base_url,
+                primary_hostname,
                 port_dir,
+            )
+
+            web_summary[
+                "vhosts"
+            ] = sorted(
+                vhosts
             )
 
             all_hosts.update(
                 vhosts
             )
 
-            if vhosts:
+        else:
 
-                update_hosts_file(
-                    ip,
-                    all_hosts,
+            print(
+                "[-] No hostname available "
+                "for VHost fuzzing."
+            )
+
+        # -----------------------------------------------------
+        # Build complete host set for this web service.
+        #
+        # The primary hostname must always be fuzzed for
+        # endpoints, plus every discovered VHost.
+        # -----------------------------------------------------
+
+        web_hosts = set()
+
+        if primary_hostname:
+            web_hosts.add(
+                primary_hostname
+            )
+
+        web_hosts.update(
+            web_summary[
+                "vhosts"
+            ]
+        )
+
+        # -----------------------------------------------------
+        # Update hosts before endpoint fuzzing
+        # -----------------------------------------------------
+
+        if web_hosts:
+
+            all_hosts.update(
+                web_hosts
+            )
+
+            update_hosts_file(
+                ip,
+                all_hosts,
+            )
+
+        # -----------------------------------------------------
+        # Endpoint fuzzing for EVERY hostname
+        # -----------------------------------------------------
+
+        if web_hosts:
+
+            for hostname in sorted(
+                web_hosts
+            ):
+
+                endpoint_base = (
+                    f"{scheme}://"
+                    f"{ip}:{port}"
+                )
+
+                run_endpoint_fuzzing(
+                    endpoint_base,
+                    hostname,
+                    port_dir,
+                )
+
+                safe_hostname = re.sub(
+                    r"[^a-zA-Z0-9._-]",
+                    "_",
+                    hostname,
+                )
+
+                endpoint_json = (
+                    port_dir
+                    / f"endpoints-"
+                    f"{safe_hostname}.json"
+                )
+
+                web_summary[
+                    "endpoints"
+                ][hostname] = (
+                    endpoint_results_for_summary(
+                        endpoint_json
+                    )
                 )
 
         else:
 
-            print(
-                "[-] Skipping VHost "
-                "fuzzing: no domain."
+            # No domain was found, so fuzz the IP directly.
+            run_endpoint_fuzzing(
+                ip_base_url,
+                ip,
+                port_dir,
             )
 
-        # -----------------------------------------------------
-        # Endpoint fuzzing
-        # -----------------------------------------------------
+            web_summary[
+                "endpoints"
+            ][ip] = (
+                endpoint_results_for_summary(
+                    port_dir
+                    / "endpoints-"
+                    f"{ip}.json"
+                )
+            )
 
-        run_directory_fuzzing(
-            base_url,
-            port_dir,
+        summary[
+            "web"
+        ].append(
+            web_summary
         )
 
     # =========================================================
@@ -1191,7 +1396,7 @@ def main():
     if all_hosts:
 
         print_section(
-            "Updating /etc/hosts"
+            "Final /etc/hosts update"
         )
 
         update_hosts_file(
@@ -1199,8 +1404,24 @@ def main():
             all_hosts,
         )
 
+    summary["hosts"] = sorted(
+        all_hosts
+    )
+
     # =========================================================
-    # Summary
+    # Save summary
+    # =========================================================
+
+    summary_file.write_text(
+        json.dumps(
+            summary,
+            indent=2,
+        ),
+        encoding="utf-8",
+    )
+
+    # =========================================================
+    # Final summary
     # =========================================================
 
     print_section(
@@ -1212,38 +1433,57 @@ def main():
     )
 
     print(
-        "[+] Open ports: "
-        + ", ".join(
-            open_ports
-        )
+        "[+] Open ports:"
     )
 
-    print(
-        "[+] Web ports: "
-        + ", ".join(
-            sorted(
-                web_services,
-                key=int,
-            )
-        )
-    )
+    for port in summary[
+        "ports"
+    ]:
 
-    if all_hosts:
+        description = (
+            f"{port['product']} "
+            f"{port['version']}"
+        ).strip()
 
-        print(
-            "[+] Hostnames:"
-        )
+        if description:
 
-        for host in sorted(
-            all_hosts
-        ):
             print(
-                f"    - {host}"
+                f"    {port['port']}/tcp "
+                f"{port['service']} "
+                f"- {description}"
+            )
+
+        else:
+
+            print(
+                f"    {port['port']}/tcp "
+                f"{port['service']}"
+            )
+
+    if summary["hosts"]:
+
+        print()
+        print(
+            "[+] Hosts:"
+        )
+
+        for hostname in summary[
+            "hosts"
+        ]:
+
+            print(
+                f"    - {hostname}"
             )
 
     print()
     print(
-        f"[+] Results: {output_dir}"
+        f"[+] Summary: "
+        f"{summary_file}"
+    )
+
+    print(
+        f"[+] Details: "
+        f"{output_dir}"
     )
 
     return 0
@@ -1260,4 +1500,5 @@ if __name__ == "__main__":
         print(
             "[!] Recon interrupted."
         )
+
         sys.exit(130)
