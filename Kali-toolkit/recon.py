@@ -13,7 +13,7 @@ from urllib.parse import urljoin, urlparse
 SECLISTS = Path("/usr/share/seclists")
 
 SUBDOMAIN_WORDLIST = (
-    SECLISTS / "Discovery/DNS/subdomains-top1million-5000.txt"
+    SECLISTS / "Discovery/DNS/subdomains-top1million-20000.txt"
 )
 
 WEB_WORDLIST = (
