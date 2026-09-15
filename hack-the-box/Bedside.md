@@ -25,9 +25,23 @@
 ## Exploitation and Initial Access
 
 - `CVE-2025-64512`: Exploitation of unsafe pickle deserialization in `pdfminer.six`.
-- Payload Delivery: A malicious PDF containing a crafted pickle payload was uploaded to the Research Portal.
-- Trigger: The uploaded PDF was processed by the backend, causing deserialization of attacker-controlled data.
-- Initial Shell: Obtained a reverse shell as `datawrangler` inside the Docker container.
+- Exploit Automation: A custom Python script was used to generate the malicious pickle payload and the corresponding PDF trigger.
+- Pickle Payload: The payload uses a custom `RCE` class with `__reduce__()` returning `os.system`, allowing arbitrary command execution during deserialization.
+
+```python
+class RCE:
+    def __init__(self, cmd):
+        self.cmd = cmd
+
+    def __reduce__(self):
+        return (os.system, (self.cmd,))
+```
+
+- PDF Trigger: The generated PDF embeds the target payload path in the `/Encoding` field. `/` characters are encoded as `#2F` before being inserted into the PDF.
+- Payload Delivery: The malicious PDF was uploaded through the Research Portal.
+- Trigger: Processing the PDF caused the vulnerable `pdfminer.six` code path to load and deserialize the attacker-controlled `.pickle.gz` payload.
+- Initial Shell: RCE was used to obtain a reverse shell as `datawrangler` inside the Docker container.
+
 
 ## Initial Container Enumeration
 
