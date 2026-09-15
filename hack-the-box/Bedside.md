@@ -75,7 +75,7 @@ class RCE:
 - Proof of Concept: A URL-encoded traversal sequence was used to escape the intended web root.
 - Initial Verification: `/etc/passwd` was successfully read through the Vite service.
 - Impact: Arbitrary file read, allowing access to files outside the intended application directory.
-- Insigths: Url path up to root directory must have beed encoded with url characters, opposite to the rest of the path:
+- Insight: The traversal sequence had to be URL-encoded (`%2e%2e%2f`) while the remaining path was left unencoded. A raw `/../../../../etc/passwd` request was not processed successfully.
 - Working
 ``` bash
 curl "http://127.0.0.1:3000/%2e%2e%2f%2e%2e%2f%2e%2e%2f%2e%2e/etc/passwd"
