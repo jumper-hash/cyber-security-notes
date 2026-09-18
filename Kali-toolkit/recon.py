@@ -3,14 +3,12 @@
 import argparse
 import json
 import re
-import ssl
+import shutil
 import subprocess
 import sys
-import urllib.error
-import urllib.request
 import xml.etree.ElementTree as ET
 from pathlib import Path
-from urllib.parse import urljoin, urlparse
+from urllib.parse import urlparse
 
 
 SECLISTS = Path("/usr/share/seclists")
@@ -31,27 +29,7 @@ HTB_END = "###END_HTB"
 FFUF_MATCH_CODES = "200,204,301,302,307,401,403"
 FFUF_THREADS = "30"
 
-SSL_CONTEXT = ssl._create_unverified_context()
-
-
-class NoRedirectHandler(
-    urllib.request.HTTPRedirectHandler
-):
-    def redirect_request(
-        self,
-        req,
-        fp,
-        code,
-        msg,
-        headers,
-        newurl,
-    ):
-        return None
-
-
-HTTP_OPENER = urllib.request.build_opener(
-    NoRedirectHandler()
-)
+CURL_TIMEOUT = 10
 
 
 def print_section(title):
@@ -239,10 +217,10 @@ def is_web_service(service):
     if name in web_names:
         return True
 
-    if (
-        name.startswith("http")
-        or "http" in name
-    ):
+    if name.startswith("http"):
+        return True
+
+    if "http" in name:
         return True
 
     if (
@@ -278,65 +256,6 @@ def get_web_scheme(service):
     return "http"
 
 
-def http_request(url, timeout=8):
-    request = urllib.request.Request(
-        url,
-        method="GET",
-        headers={
-            "User-Agent": "HTB-Recon/1.0",
-        },
-    )
-
-    try:
-        if url.startswith(
-            "https://"
-        ):
-            response = HTTP_OPENER.open(
-                request,
-                timeout=timeout,
-                context=SSL_CONTEXT,
-            )
-        else:
-            response = HTTP_OPENER.open(
-                request,
-                timeout=timeout,
-            )
-
-        return (
-            response.status,
-            response.headers,
-        )
-
-    except urllib.error.HTTPError as exc:
-        return (
-            exc.code,
-            exc.headers,
-        )
-
-    except (
-        urllib.error.URLError,
-        TimeoutError,
-    ) as exc:
-        print(
-            f"[!] HTTP error: {exc}"
-        )
-
-        return (
-            None,
-            None,
-        )
-
-    except Exception as exc:
-        print(
-            f"[!] HTTP request failed: {exc}"
-        )
-
-        return (
-            None,
-            None,
-        )
-
-
 def extract_hostname(url):
     if not url:
         return None
@@ -346,13 +265,237 @@ def extract_hostname(url):
             url
         )
 
-        if parsed.hostname:
-            return parsed.hostname.lower()
+        hostname = parsed.hostname
+
+        if hostname:
+            return hostname.lower()
 
     except Exception:
         pass
 
     return None
+
+
+def get_origin(url):
+    if not url:
+        return None
+
+    try:
+        parsed = urlparse(
+            url
+        )
+
+        if not parsed.scheme or not parsed.netloc:
+            return None
+
+        return (
+            f"{parsed.scheme}://"
+            f"{parsed.netloc}"
+        )
+
+    except Exception:
+        return None
+
+
+def is_ip_address(hostname):
+    if not hostname:
+        return False
+
+    return bool(
+        re.fullmatch(
+            r"\d{1,3}(?:\.\d{1,3}){3}",
+            hostname,
+        )
+    )
+
+
+def is_redirect_probe(
+    probe,
+    original_url,
+):
+    """
+    Returns True when the original web service redirects
+    somewhere else.
+
+    Example:
+        http://10.10.10.10/
+            ->
+        https://management.htb/
+
+    """
+
+    initial_status = probe.get(
+        "first_status"
+    )
+
+    effective_url = probe.get(
+        "effective_url"
+    )
+
+    if (
+        initial_status is None
+        or effective_url is None
+    ):
+        return False
+
+    if not (
+        300 <= initial_status < 400
+    ):
+        return False
+
+    normalized_original = (
+        original_url.rstrip("/")
+    )
+
+    normalized_effective = (
+        effective_url.rstrip("/")
+    )
+
+    return (
+        normalized_original
+        != normalized_effective
+    )
+
+
+def curl_probe(
+    url,
+    timeout=CURL_TIMEOUT,
+):
+    """
+    Runs curl -kL and extracts:
+    - first HTTP status
+    - final HTTP status
+    - final effective URL
+
+    url_effective is parsed even when curl exits
+    with a non-zero code because the final hostname
+    may not exist in /etc/hosts yet.
+    """
+
+    if shutil.which("curl") is None:
+        print(
+            "[!] curl not found."
+        )
+
+        return {
+            "returncode": 127,
+            "first_status": None,
+            "final_status": None,
+            "effective_url": None,
+            "output": "",
+        }
+
+    marker = "__HTB_CURL_FINAL__"
+
+    command = [
+        "curl",
+        "-kL",
+        "-sS",
+        "--max-redirs",
+        "10",
+        "--connect-timeout",
+        str(timeout),
+        "--max-time",
+        str(timeout),
+        "-D",
+        "-",
+        "-o",
+        "/dev/null",
+        "-w",
+        (
+            f"\n{marker}"
+            f"\t%{{http_code}}"
+            f"\t%{{url_effective}}\n"
+        ),
+        url,
+    ]
+
+    print()
+    print(
+        f"[>] {' '.join(command)}"
+    )
+
+    try:
+        result = subprocess.run(
+            command,
+            stdout=subprocess.PIPE,
+            stderr=subprocess.STDOUT,
+            text=True,
+            check=False,
+        )
+
+    except KeyboardInterrupt:
+        print()
+        print(
+            "[!] Interrupted by user."
+        )
+
+        return {
+            "returncode": 130,
+            "first_status": None,
+            "final_status": None,
+            "effective_url": None,
+            "output": "",
+        }
+
+    output = result.stdout
+
+    marker_match = re.search(
+        rf"{re.escape(marker)}\t(\d{{3}})\t([^\r\n]+)",
+        output,
+    )
+
+    final_status = None
+    effective_url = None
+
+    if marker_match:
+        final_status = int(
+            marker_match.group(1)
+        )
+
+        effective_url = (
+            marker_match.group(2)
+            .strip()
+        )
+
+    header_data = output
+
+    if marker_match:
+        header_data = output[
+            :marker_match.start()
+        ]
+
+    status_matches = re.findall(
+        r"^HTTP/\S+\s+(\d{3})",
+        header_data,
+        re.MULTILINE,
+    )
+
+    first_status = (
+        int(status_matches[0])
+        if status_matches
+        else final_status
+    )
+
+    if result.returncode != 0:
+        print(
+            f"[!] curl returned exit code "
+            f"{result.returncode}"
+        )
+
+        if effective_url:
+            print(
+                f"[+] url_effective: "
+                f"{effective_url}"
+            )
+
+    return {
+        "returncode": result.returncode,
+        "first_status": first_status,
+        "final_status": final_status,
+        "effective_url": effective_url,
+        "output": output,
+    }
 
 
 def get_htb_section(lines):
@@ -387,6 +530,9 @@ def update_hosts_file(
             hostname.strip().lower()
             for hostname in hostnames
             if hostname.strip()
+            and not is_ip_address(
+                hostname.strip()
+            )
         }
     )
 
@@ -423,36 +569,52 @@ def update_hosts_file(
 
         return False
 
-    # Comment every active HTB entry.
-    for i in range(
-        start + 1,
-        end,
-    ):
-        stripped = lines[i].strip()
-
-        if (
-            stripped
-            and not stripped.startswith("#")
-        ):
-            lines[i] = "#" + lines[i]
-
-    start, end = get_htb_section(
-        lines
-    )
-
-    entry = (
+    new_entry = (
         f"{ip}\t"
         f"{' '.join(hostnames)}"
     )
 
-    lines.insert(
-        end,
-        entry,
+    new_lines = lines[
+        :start + 1
+    ]
+
+    for line in lines[
+        start + 1:end
+    ]:
+        stripped = line.strip()
+
+        if not stripped:
+            new_lines.append(
+                line
+            )
+            continue
+
+        if stripped.startswith("#"):
+            new_lines.append(
+                line
+            )
+            continue
+
+        parts = stripped.split()
+
+        if parts and parts[0] == ip:
+            continue
+
+        new_lines.append(
+            "#" + line
+        )
+
+    new_lines.append(
+        new_entry
+    )
+
+    new_lines.extend(
+        lines[end:]
     )
 
     try:
         HOSTS_FILE.write_text(
-            "\n".join(lines) + "\n",
+            "\n".join(new_lines) + "\n",
             encoding="utf-8",
         )
 
@@ -468,11 +630,11 @@ def update_hosts_file(
         return False
 
     print(
-        f"[+] /etc/hosts:"
+        "[+] /etc/hosts:"
     )
 
     print(
-        f"    {entry}"
+        f"    {new_entry}"
     )
 
     return True
@@ -543,6 +705,7 @@ def print_vhost_results(
         print(
             "[-] No VHosts found."
         )
+
         return
 
     print(
@@ -590,6 +753,7 @@ def print_endpoint_results(
         print(
             "[-] No endpoints found."
         )
+
         return
 
     print(
@@ -745,7 +909,8 @@ def run_vhost_fuzzing(
 
 
 def run_endpoint_fuzzing(
-    base_url,
+    scheme,
+    port,
     hostname,
     output_dir,
 ):
@@ -777,6 +942,12 @@ def run_endpoint_fuzzing(
         / f"endpoints-{safe_hostname}.txt"
     )
 
+    target_url = (
+        f"{scheme}://"
+        f"{hostname}:"
+        f"{port}"
+    )
+
     print(
         f"[+] Endpoint fuzzing: "
         f"{hostname}"
@@ -793,7 +964,7 @@ def run_endpoint_fuzzing(
                 WEB_WORDLIST
             ),
             "-u",
-            f"{base_url}/FUZZ",
+            f"{target_url}/FUZZ",
             "-H",
             f"Host: {hostname}",
             "-mc",
@@ -870,11 +1041,6 @@ def main():
         / "nmap-services.xml"
     )
 
-    redirects_file = (
-        output_dir
-        / "redirects.txt"
-    )
-
     summary_file = (
         output_dir
         / "summary.json"
@@ -929,6 +1095,7 @@ def main():
     )
 
     for port in open_ports:
+
         print(
             f"    - {port}"
         )
@@ -967,6 +1134,7 @@ def main():
         services,
         key=int,
     ):
+
         service = services[
             port
         ]
@@ -1086,7 +1254,7 @@ def main():
         )
 
     # =========================================================
-    # 4. Enumerate every web service
+    # 4. HTTP enumeration
     # =========================================================
 
     print_section(
@@ -1127,10 +1295,13 @@ def main():
             "port": int(port),
             "scheme": scheme,
             "base": ip_base_url,
+            "effective_url": None,
             "redirect": None,
             "hosts": [],
             "vhosts": [],
             "endpoints": {},
+            "enumeration_skipped": False,
+            "skip_reason": None,
         }
 
         print_section(
@@ -1139,134 +1310,216 @@ def main():
         )
 
         # -----------------------------------------------------
-        # Redirect
+        # curl -kL
         # -----------------------------------------------------
 
         print(
-            "[+] Checking redirect..."
+            "[+] Resolving hostname with curl -kL..."
         )
 
-        status, headers = http_request(
+        probe = curl_probe(
             f"{ip_base_url}/"
         )
 
-        redirect_value = None
+        if probe[
+            "returncode"
+        ] == 130:
+            return 130
 
-        if headers:
+        effective_url = probe[
+            "effective_url"
+        ]
 
-            location = headers.get(
-                "Location"
+        primary_hostname = extract_hostname(
+            effective_url
+        )
+
+        redirect_file = (
+            port_dir
+            / "redirect.txt"
+        )
+
+        is_redirect = is_redirect_probe(
+            probe,
+            ip_base_url,
+        )
+
+        if effective_url:
+
+            web_summary[
+                "effective_url"
+            ] = effective_url
+
+            redirect_file.write_text(
+                (
+                    f"Initial URL: "
+                    f"{ip_base_url}/\n"
+                    f"Initial status: "
+                    f"{probe['first_status']}\n"
+                    f"Effective URL: "
+                    f"{effective_url}\n"
+                    f"Final status: "
+                    f"{probe['final_status']}\n"
+                ),
+                encoding="utf-8",
             )
 
-            if location:
+            print(
+                f"[+] Initial HTTP status: "
+                f"{probe['first_status']}"
+            )
 
-                redirect_value = urljoin(
-                    f"{ip_base_url}/",
-                    location,
-                )
+            print(
+                f"[+] Effective URL: "
+                f"{effective_url}"
+            )
 
-                hostname = extract_hostname(
-                    redirect_value
-                )
+            if is_redirect:
 
                 print(
-                    f"[+] Redirect: "
-                    f"{status} -> "
-                    f"{redirect_value}"
-                )
-
-                (
-                    port_dir
-                    / "redirect.txt"
-                ).write_text(
-                    redirect_value
-                    + "\n",
-                    encoding="utf-8",
+                    f"[+] Redirect detected: "
+                    f"{ip_base_url}/ -> "
+                    f"{effective_url}"
                 )
 
                 web_summary[
                     "redirect"
-                ] = redirect_value
+                ] = effective_url
 
-                if hostname:
-
-                    print(
-                        f"[+] Hostname: "
-                        f"{hostname}"
-                    )
-
-                    all_hosts.add(
-                        hostname
-                    )
-
-                    web_summary[
-                        "hosts"
-                    ].append(
-                        hostname
-                    )
-
-            else:
+            if (
+                primary_hostname
+                and not is_ip_address(
+                    primary_hostname
+                )
+            ):
 
                 print(
-                    f"[-] No redirect "
-                    f"(HTTP {status})"
+                    f"[+] Hostname: "
+                    f"{primary_hostname}"
                 )
 
-                (
-                    port_dir
-                    / "redirect.txt"
-                ).write_text(
-                    f"HTTP {status}\n",
-                    encoding="utf-8",
+                web_summary[
+                    "hosts"
+                ].append(
+                    primary_hostname
+                )
+
+                all_hosts.add(
+                    primary_hostname
+                )
+
+                update_hosts_file(
+                    ip,
+                    all_hosts,
                 )
 
         else:
 
             print(
-                "[-] No HTTP response."
+                "[-] Could not determine "
+                "effective URL."
             )
 
-            (
-                port_dir
-                / "redirect.txt"
-            ).write_text(
-                "No HTTP response\n",
+            redirect_file.write_text(
+                "No effective URL found\n",
                 encoding="utf-8",
             )
 
         # -----------------------------------------------------
-        # Initial /etc/hosts update
+        # If this service redirects, stop enumerating it.
+        #
+        # Typical:
+        #   80 -> 443
+        #
+        # We already got the hostname from the redirect and
+        # continue with the actual destination web service.
         # -----------------------------------------------------
 
-        if all_hosts:
+        if is_redirect:
 
-            update_hosts_file(
-                ip,
-                all_hosts,
+            web_summary[
+                "enumeration_skipped"
+            ] = True
+
+            web_summary[
+                "skip_reason"
+            ] = (
+                "Web service redirects "
+                "to another URL"
             )
 
-        # -----------------------------------------------------
-        # Select primary hostname
-        # -----------------------------------------------------
-
-        primary_hostname = None
-
-        if web_summary["hosts"]:
-
-            primary_hostname = (
-                web_summary[
-                    "hosts"
-                ][0]
+            print(
+                "[-] Redirect detected."
             )
 
-        if primary_hostname:
+            print(
+                "[-] Skipping VHost "
+                "and endpoint enumeration."
+            )
 
-            # -------------------------------------------------
-            # VHost fuzzing
-            # -------------------------------------------------
+            summary[
+                "web"
+            ].append(
+                web_summary
+            )
+
+            continue
+
+        # -----------------------------------------------------
+        # Non-redirecting service
+        # -----------------------------------------------------
+
+        if (
+            primary_hostname
+            and not is_ip_address(
+                primary_hostname
+            )
+        ):
+
+            print(
+                "[+] Verifying hostname..."
+            )
+
+            hostname_url = (
+                f"{scheme}://"
+                f"{primary_hostname}:"
+                f"{port}/"
+            )
+
+            verify = curl_probe(
+                hostname_url
+            )
+
+            if verify[
+                "effective_url"
+            ]:
+
+                print(
+                    f"[+] Verified URL: "
+                    f"{verify['effective_url']}"
+                )
+
+        # -----------------------------------------------------
+        # VHost fuzzing
+        # -----------------------------------------------------
+
+        vhosts = set()
+
+        if (
+            primary_hostname
+            and not is_ip_address(
+                primary_hostname
+            )
+        ):
+
+            vhost_base = (
+                f"{scheme}://"
+                f"{primary_hostname}:"
+                f"{port}"
+            )
 
             vhosts = run_vhost_fuzzing(
-                ip_base_url,
+                vhost_base,
                 primary_hostname,
                 port_dir,
             )
@@ -1281,23 +1534,33 @@ def main():
                 vhosts
             )
 
+            if vhosts:
+
+                update_hosts_file(
+                    ip,
+                    all_hosts,
+                )
+
         else:
 
             print(
-                "[-] No hostname available "
+                "[-] No domain available "
                 "for VHost fuzzing."
             )
 
         # -----------------------------------------------------
-        # Build complete host set for this web service.
-        #
-        # The primary hostname must always be fuzzed for
-        # endpoints, plus every discovered VHost.
+        # Host list for endpoint fuzzing
         # -----------------------------------------------------
 
         web_hosts = set()
 
-        if primary_hostname:
+        if (
+            primary_hostname
+            and not is_ip_address(
+                primary_hostname
+            )
+        ):
+
             web_hosts.add(
                 primary_hostname
             )
@@ -1307,10 +1570,6 @@ def main():
                 "vhosts"
             ]
         )
-
-        # -----------------------------------------------------
-        # Update hosts before endpoint fuzzing
-        # -----------------------------------------------------
 
         if web_hosts:
 
@@ -1324,7 +1583,7 @@ def main():
             )
 
         # -----------------------------------------------------
-        # Endpoint fuzzing for EVERY hostname
+        # Endpoint fuzzing
         # -----------------------------------------------------
 
         if web_hosts:
@@ -1333,13 +1592,9 @@ def main():
                 web_hosts
             ):
 
-                endpoint_base = (
-                    f"{scheme}://"
-                    f"{ip}:{port}"
-                )
-
                 run_endpoint_fuzzing(
-                    endpoint_base,
+                    scheme,
+                    port,
                     hostname,
                     port_dir,
                 )
@@ -1366,9 +1621,9 @@ def main():
 
         else:
 
-            # No domain was found, so fuzz the IP directly.
             run_endpoint_fuzzing(
-                ip_base_url,
+                scheme,
+                port,
                 ip,
                 port_dir,
             )
@@ -1490,12 +1745,14 @@ def main():
 
 
 if __name__ == "__main__":
+
     try:
         sys.exit(
             main()
         )
 
     except KeyboardInterrupt:
+
         print()
         print(
             "[!] Recon interrupted."
