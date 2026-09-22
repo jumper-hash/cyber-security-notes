@@ -564,11 +564,9 @@ Re-enumeration showed:
 - `DANGLINGTREE.HTB\Enterprise Admins`
 
 Jake was now an Enrollable Principal:
-
 `DANGLINGTREE.HTB\jake.h`
 
 Certipy detected:
-
 - `ESC1`
 - `ESC4`
 
@@ -577,10 +575,10 @@ Certipy detected:
 - `Enrollee Supplies Subject = True`
 - `Client Authentication = True`
 - `jake.h` had Enrollment Rights.
-- No Manager Approval was required.
 
 ## Administrator Certificate Request
 
-Built-in Administrator RID:
+Built-in Administrator RID: `500`
 
-`500`
+## Final objective fulfilled
+Successfully extracted `C:\Users\Administrator\Desktop\root.txt`
