@@ -41,7 +41,7 @@
 
 - Identified an outdated/vulnerable Windows Admin Center deployment.
 
-### CVE-2026-26119
+### `CVE-2026-26119`
 
 - Exploiting the authenticated RCE vulnerability to execute PowerShell commands through WAC.
 
