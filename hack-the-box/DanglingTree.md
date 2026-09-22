@@ -39,11 +39,11 @@
 
 ### Vulnerability Analysis
 
-- Identified an outdated/vulnerable Windows Admin Center deployment.
+Identified an outdated/vulnerable Windows Admin Center deployment.
 
 ### `CVE-2026-26119`
 
-- Exploiting the authenticated RCE vulnerability to execute PowerShell commands through WAC.
+Exploiting the authenticated RCE vulnerability to execute PowerShell commands through WAC.
 
 ### Exploit
 
@@ -75,7 +75,7 @@ Initial command execution was achieved as `danglingtree\anderson.w`.
 
 ### Result
 
-- Obtaining a stable interactive PowerShell session as `anderson.w`.
+Obtaining a stable interactive PowerShell session as `anderson.w`.
 
 ## Internal Service Enumeration
 
@@ -106,7 +106,7 @@ Both returned `Sub service process` when accessed locally and were identified as
 
 ## Internal Network Enumeration and SmarterMail Reconnaissance
 
-- `SmarterMail` was identified on `127.0.0.1:17017`.
+`SmarterMail` was identified on `127.0.0.1:17017`.
 
 ### Version
 
@@ -126,11 +126,11 @@ Both returned `Sub service process` when accessed locally and were identified as
 
 ### Vulnerability
 
-- `CVE-2026-23760`
+`CVE-2026-23760`
 
 ### Password Reset
 
-- Exploiting `/api/v1/auth/force-reset-password`.
+Exploiting `/api/v1/auth/force-reset-password`.
 
 ```bash
 curl -s --socks5-hostname 127.0.0.1:1080 \
