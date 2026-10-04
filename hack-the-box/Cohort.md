@@ -90,10 +90,10 @@ marimo:x:1000:1000::/home/marimo:/usr/sbin/nologin
 ```bash
 dpkg-query -W packagekit packagekit-tools
 ```
-- Returned: `packagekit        1.2.8-2ubuntu1.2`, `packagekit-tools        1.2.8-2ubuntu1.2`
+- Returned: `packagekit -> 1.2.8-2ubuntu1.2`, `packagekit-tool -> 1.2.8-2ubuntu1.2`
 
 
-- Additional version check: `pkcon --version        1.2.8`
+- Additional version check: `pkcon --version -> 1.2.8`
 
 ## `CVE-2026-41651` — PackageKit Local Privilege Escalation
 
