@@ -83,23 +83,19 @@ marimo:x:1000:1000::/home/marimo:/usr/sbin/nologin
 - `nologin` prevented interactive SSH session, Marimo RCE was used instead
 
 ## Local Privilege Escalation Enumeration
-
-- PackageKit was identified as interesting local attack surface
 - PackageKit version was checked
 
 ```bash
 dpkg-query -W packagekit packagekit-tools
 ```
 - Returned: `packagekit -> 1.2.8-2ubuntu1.2`, `packagekit-tool -> 1.2.8-2ubuntu1.2`
-
-
 - Additional version check: `pkcon --version -> 1.2.8`
 
 ## `CVE-2026-41651` — PackageKit Local Privilege Escalation
 
 - PackageKit `1.2.8-2ubuntu1.2` was vulnerable to `CVE-2026-41651`
 - Vulnerability allows unprivileged local user to install arbitrary packages as root
-- TOCTOU race condition in PackageKit transaction handling
+- `TOCTOU`race condition in PackageKit transaction handling
 
 ## PackageKit Exploitation on Cohort
 
