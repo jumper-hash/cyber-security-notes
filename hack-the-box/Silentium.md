@@ -45,7 +45,7 @@ File containing reverse shell encoded in base64 to reduce Node interpreter troub
 - `ip route` -> 172.18.0.1 default gateway
 - `ip a` -> 172.18.0.2 as current contaier
 - Revealing other addresses in subnet and saving outcome to the `/tmp/scan`:
-``bash
+```bash
 for i in $(seq 1 254); do (ping -c 1 -W 1 172.18.0.$i >/dev/null && echo "Alive: 172.18.0.$i" >> /tmp/scan) & done
 ```
 Entire subnet scan led to identification only 172.18.0.3 as working address
