@@ -1,15 +1,12 @@
 # HackTheBox DutyBound Full Chain Penetration Testing
 
 ## Recon
-- Target: `airsnacks.htb`
-- External scan (`0.0.0.0`): ports `22`, `80`, `443` open
-- Port `8000` only reachable on localhost - served the same content as the regular HTTP(S) vhost, not a separate service
+- Target: `airsnacks.htb` / `10.129.231.23`
+- External scan: Ports `22`, `80`, `443` open
+- Port `8000` only reachable on localhost - served via nginx to the web ports
 
 ## Foothold - SQL Injection in Boarding Pass Scanner
-- Found a SQL injection in the checkout endpoint:
-```text
-POST https://airsnacks.htb/checkout/boarding-pass/verify
-```
+- Found a SQL injection in the checkout endpoint: `POST https://airsnacks.htb/checkout/boarding-pass/verify`
 - The endpoint parses a fixed-format boarding pass string (`raw` field) and inserts one of its fields into a query unsanitized; closing the field and appending `||<subquery>||` into the trailing item let arbitrary SQL ride along
 - Backend identified as PostgreSQL `18.6`
 - Automated the injection with a Python client (`step1/db-request.py`) that builds the fixed-width `raw` field, computes its length in hex, and POSTs it with the session cookie
@@ -31,6 +28,7 @@ POST https://airsnacks.htb/checkout/boarding-pass/verify
 - `airsnacks`: 7 application tables
 - `htbairways`: `flight` and `passenger` tables, 20 records each
 - `htbairways` is owned by the PostgreSQL user `postgres`
+- Database content irrelevant to the rest of the chain
 
 ## Pivot `postgres` -> `dutyfree-kiosk`
 - Checked system-level permissions of `postgres`: member of group `ssl-cert`, confirmed read access to `ssl-cert-snakeoil.key`
@@ -49,18 +47,18 @@ SHIFT = d.keysym_to_keycode(string_to_keysym("Shift_L"))
 def tap_char(ch):
     code = d.keysym_to_keycode(ord(ch))
     shift = d.keycode_to_keysym(code, 0) != ord(ch)
-    if shift: xtest.fake_input(d, X.KeyPress, SHIFT)
+    if shift:
+        xtest.fake_input(d, X.KeyPress, SHIFT)
     xtest.fake_input(d, X.KeyPress, code)
     xtest.fake_input(d, X.KeyRelease, code)
-    if shift: xtest.fake_input(d, X.KeyRelease, SHIFT)
+    if shift:
+        xtest.fake_input(d, X.KeyRelease, SHIFT)
     d.sync()
 ```
 - Confirmed the spawned `xterm` ran as UID `1000` (`dutyfree-kiosk`), giving an interactive context as that user
-- Used the same keystroke-injection channel to drop an SSH key: typed a one-liner into the hijacked `xterm` that created `~/.ssh`, copied a staged `authorized_keys` into it, and fixed permissions
+- Used the same keystroke-injection channel to drop an SSH key: typed a one-liner into the hijacked `xterm` that created `~/.ssh`, copied a staged `authorized_keys` into it and fixed permissions
 
-## systemd Path Unit Enumeration
-- Three relevant files found:
-
+## Discovery of `vrs-duty-apply.service`
 | File | Role |
 | --- | --- |
 | `/opt/vrs/data/duty-rates.csv` | Input data |
@@ -69,7 +67,7 @@ def tap_char(ch):
 
 - Processing script: `/opt/vrs/bin/apply-duty-rates.sh`
 - Key findings:
-  - `duty-rates.csv` is writable by group `pos-ops`
+  - `duty-rates.csv` is writable by group `pos-ops` and readable by anyone
   - the `.path` unit triggers the `.service` on any write to the CSV
   - the `.service` unit has no `User=` directive, so it runs as `root` by default
   - the script parses the CSV and uses an unsafe `eval` on one of its fields
@@ -83,26 +81,7 @@ eval "${tax_class}=${duty_pct}"
 - Edited `duty-rates.csv` (writable via `pos-ops` group membership) with a malicious `tax_class` value, which the path unit picked up and ran as root
 - Proof of execution:
 ```text
--rw-r--r-- 1 root root 1 Nov 8 17:51 'chuj=20'
+-rw-r--r-- 1 root root 1 Nov 8 17:51 'veryusualfile=20'
 ```
 - File created in `/tmp`, owned by `root:root` - confirms arbitrary command execution as root through the path-unit trigger
-
-## Full Attack Path
-SQL injection in boarding-pass verify endpoint -> `pg_execute_server_program` role -> `COPY ... TO PROGRAM` RCE -> reverse shell as `postgres` -> PostgreSQL enumeration -> X11/XTEST keystroke injection into idle Openbox session -> `xterm` as `dutyfree-kiosk` -> SSH key persistence -> systemd path unit watching a group-writable CSV -> unsanitized `eval` in the root-run service script -> arbitrary command execution as root
-
-## Current Status
-| Stage | Status |
-| --- | --- |
-| SQL Injection | Confirmed |
-| RCE as `postgres` | Confirmed |
-| Pivot to `dutyfree-kiosk` | Confirmed |
-| systemd enumeration | Complete |
-| Root command execution | Confirmed |
-| Interactive root shell | Confirmed |
-
-## Key Takeaways
-- A fixed-width input field parsed server-side without strict validation was enough to inject SQL into a trailing component
-- `pg_execute_server_program` membership turns `COPY ... TO PROGRAM` into direct OS command execution for the PostgreSQL service account
-- An idle, unlocked X11 session is a local privilege boundary on its own - `XTEST` lets any process on the same X server synthesize input for another user's session
-- A systemd `.path` unit watching a group-writable file, paired with a `.service` unit lacking `User=`, turns a low-privilege write into root execution
-- `eval` on unsanitized external input (here, a CSV field) is a direct path to command execution
+- `/root/root.txt` flag recovered
